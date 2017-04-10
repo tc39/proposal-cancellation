@@ -1,0 +1,188 @@
+<emu-clause id="sec-cancellationtokensource-abstract-operations">
+    <h1>CancellationTokenSource Abstract Operations</h1>
+    <emu-clause id="sec-cancellationcapability-records">
+        <h1>CancellationCapability Records</h1>
+        <p>A CancellationCapability is a Record value used to encapsulate cancellation state as well as any 
+            registered callbacks to execute when cancellation is requested. CancellationCapability Records 
+            are produced by the NewCancellationCapability abstract operation.</p>
+        <p>CancellationCapability Records have the fields listed in <emu-xref href="#table-cancellationcapability-record-fields"></emu-xref>.</p>
+        <emu-table id="table-cancellationcapability-record-fields" caption="CancellationCapability Record Fields">
+            <table>
+                <tbody>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>[[CancellationState]]</td>
+                    <td>A String representing the current cancellation state. Possible values are `"open"`, `"cancellationRequested"`, and `"closed"`.</td>
+                </tr>
+                <tr>
+                    <td>[[Callbacks]]</td>
+                    <td>A List of Function objects to be invoked when cancellation is requested.
+                </tr>
+                <tr>
+                    <td>[[LinkingRegistrations]]</td>
+                    <td>A List of CancellationTokenRegistration objects that can be used to unregister callbacks for linked tokens.</td>
+                </tr>
+                </tbody>
+            </table>
+        </emu-table>
+    </emu-clause>
+    <emu-clause id="sec-newcancellationcapability">
+        <h1>NewCancellationCapability ( )</h1>
+        <p>When the abstract operation NewCancellationCapability is called, the following steps are taken:</p>
+        <emu-alg>
+            1.
+        </emu-alg>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-cancellationtokensource-jobs">
+    <h1>CancellationTokenSource Jobs</h1>
+</emu-clause>
+<emu-clause id="sec-cancellationtokensource-constructor">
+    <h1>The CancellationTokenSource Constructor</h1>
+    <p>The CancellationTokenSource constructor is the <dfn>%CancellationTokenSource%</dfn> intrinsic object and the 
+        initial value of the `CancellationTokenSource` property of the global object. When called as a 
+        constructor it creates and initializes a new CancellationTokenSource object. CancellationTokenSource 
+        is not intended to be called as a function and will throw an exception when used in that manner.</p>
+    <emu-clause id="sec-cancellationtokensource">
+        <h1>CancellationTokenSource ( [ _linkedTokens_ ] )</h1>
+        <p>When the `CancellationTokenSource` function is called with optional argument _linkedTokens_, the 
+            following steps are taken:</p>
+        <emu-alg>
+            1.
+        </emu-alg>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtokensource-constructor">
+    <h1>Properties of the CancellationTokenSource Constructor</h1>
+    <p>The value of the [[Prototype]] internal slot of the `CancellationTokenSource` constructor is the intrinsic 
+        object %FunctionPrototype%.</p>
+    <p>The CancellationTokenSource constructor has the following properties:</p>
+    <emu-clause id="sec-cancellationtokensource.prototype">
+        <h1>CancellationTokenSource.prototype</h1>
+        <p>The initial value of `CancellationTokenSource.prototype` is the intrinsic object %CancellationTokenSourcePrototype%.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtokensource-prototype-object">
+    <h1>Properties of the CancellationTokenSource Prototype Object</h1>
+    <p>The CancellationTokenSource prototype object is the intrinsic object <dfn>%CancellationTokenSourcePrototype%</dfn>. 
+        The value of the [[Prototype]] internal slot of the CancellationTokenSource prototype object is the 
+        intrinsic object %ObjectPrototype%. The CancellationTokenSource prototype object is an ordinary object. 
+        It does not have either of the [[CancellationSource]] or [[CancellationToken]] internal slots.</p>
+    <emu-clause id="sec-cancellationtokensource.prototype.cancel">
+        <h1>CancellationTokenSource.prototype.cancel ()</h1>
+        <p>When the `cancel` method is called, the following steps are taken:</p>
+        <emu-alg>
+            1.
+        </emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtokensource.prototype.close">
+        <h1>CancellationTokenSource.prototype.close ()</h1>
+        <p>When the `close` method is called, the following steps are taken:</p>
+        <emu-alg>
+            1.
+        </emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtokensource.prototype.constructor">
+        <h1>CancellationTokenSource.prototype.constructor</h1>
+        <p>The initial value of `CancellationTokenSource.prototype.constructor` is the intrinsic object %CancellationTokenSource%.</p>
+    </emu-clause>
+    <emu-clause id="sec-get-cancellationtokensource.prototype.token">
+        <h1>get CancellationTokenSource.prototype.token</h1>
+        <p>`CancellationTokenSource.prototype.token` is an accessor property whose set accessor function is *undefined*.
+            Its get accessor function performs the following steps:</p>
+        <emu-alg>
+            1.
+        </emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtokensource.prototype-@@tostringtag">
+        <h1>CancellationTokenSource.prototype [ @@toStringTag ]</h1>
+        <p>The initial value of the @@toStringTag property is the String value `"CancellationTokenSource"`.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtokensource-instances">
+    <h1>Properties of CancellationTokenSource Instances</h1>
+    <p>CancellationTokenSource instances are ordinary objects that inherit from the CancellationTokenSource 
+        prototype object (the intrinsic %CancellationTokenSourcePrototype%). CancellationTokenSource instances 
+        are initially created with the internal slots described in <emu-xref href="#table-cancellationtokensource-slots"></emu-xref>.</p>
+    <emu-table id="table-cancellationtokensource-slots" caption="Internal Slots of CancellationTokenSource Instances">
+        <table>
+            <tbody>
+            <tr>
+                <th>Internal Slot</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>[[CancellationSource]]</td>
+                <td>A CancellationCapability record containing the cancellation state of the source.</td>
+            </tr>
+            <tr>
+                <td>[[CancellationToken]]</td>
+                <td>A CancellationToken instance entangled with the source, sharing the same CancellationCapability record.</td>
+            </tr>
+            </tbody>
+        </table>
+    </emu-table>
+</emu-clause>
+<emu-clause id="sec-cancellation-registration-objects">
+    <h1>Cancellation Registration Objects</h1>
+    <p>A Cancellation Registration is an object that provides the capability to unregister a callback 
+        registered to some CancellationToken object. There is not a named constructor for Cancellation
+        Registration objects. Instead, Cancellation Registration objects are created by calling certain
+        methods of CancellationToken instance objects.</p>
+    <emu-clause id="sec-createcancellationregistration">
+        <h1>CreateCancellationRegistration ( _token_, _callback_ )</h1>
+        <p>When CreateCancellationRegistration is called with arguments _token_ and _callback_ the following
+            steps are taken:</p>
+        <emu-alg>
+            1.
+        </emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-%cancellationregistrationprototype%-object">
+        <h1>The %CancellationRegistrationPrototype% Object</h1>
+        <p>The <dfn>%CancellationRegistrationPrototype%</dfn> object is an orderinary object and its
+            [[Prototype]] internal slot is the %ObjectPrototype% intrinsic object. In addition, 
+            %CancellationRegistrationPrototype% has the following properties:</p>
+        <emu-clause id="sec-%cancellationregistrationprototype%.unregister">
+            <h1>%CancellationRegistrationPrototype%.unregister ()</h1>
+            <p>When the `unregister` method is called, the following steps are taken:</p>
+            <emu-alg>
+                1.
+            </emu-alg>
+        </emu-clause>
+        <emu-clause id="sec-%cancellationregistrationprototype%-@@tostringtag">
+            <h1>%CancellationRegistrationPrototype% [ @@toStringTag ]</h1>
+            <p>The initial value of the @@toStringTag property is the String value `"CancellationToken Registration"`.</p>
+            <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+        </emu-clause>
+    </emu-clause>
+    <emu-clause id="sec-properties-of-cancellationregistration-instances">
+        <h1>Properties of Cancellation Registration Instances</h1>
+        <p>Cancellation Registration instances are ordinary objects that inherit properties from the 
+            %CancellationRegistrationPrototype% intrinsic object. Cancellation Registration instances
+            are initially created with the internal slots listed in 
+            <emu-xref href="#table-cancellationregistration-slots"></emu-xref>.</p>
+        <emu-table id="table-cancellationregistration-slots" caption="Internal Slots of Cancellation Registration Instances">
+            <table>
+                <tbody>
+                <tr>
+                    <th>Internal Slot</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>[[CancellationSource]]</td>
+                    <td>The CancellationCapability record for the token to which this registration is associated.</td>
+                </tr>
+                <tr>
+                    <td>[[Callback]]</td>
+                    <td>A Function object to execute when cancellation is requested.</td>
+                </tr>
+                </tbody>
+            </table>
+        </emu-table>
+    </emu-clause>
+</emu-clause>

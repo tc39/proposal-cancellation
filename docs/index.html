@@ -4,12 +4,391 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <link rel="spec" href="es2015">
 <script src="ecmarkup.js"></script>
-<title>Cancellation API</title><script type="application/json" id="menu-search-biblio">[{"type":"clause","id":"sec-intro","aoid":null,"title":"Introduction","titleHTML":"Introduction","number":"","namespace":"<no location>","location":"","referencingIds":[],"key":"Introduction"},{"type":"clause","id":"sec-copyright-and-software-license","aoid":null,"title":"Copyright & Software License","titleHTML":"Copyright &amp; Software License","number":"A","namespace":"<no location>","location":"","referencingIds":[],"key":"Copyright & Software License"}]</script></head><body><div id="menu-toggle">☰</div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-intro" title="Introduction">Introduction</a></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version first">Stage 0 Draft / April 10, 2017</h1><h1 class="title">Cancellation API</h1>
+<title>Cancellation API</title><script type="application/json" id="menu-search-biblio">[{"type":"clause","id":"sec-intro","aoid":null,"title":"Introduction","titleHTML":"Introduction","number":"","namespace":"<no location>","location":"","referencingIds":[],"key":"Introduction"},{"type":"table","id":"table-7","number":1,"caption":"Table 1: Well-known Intrinsic Objects","referencingIds":[],"namespace":"<no location>","location":"","key":"Table 1: Well-known Intrinsic Objects"},{"type":"clause","id":"sec-well-known-intrinsic-objects","aoid":null,"title":"Well-Known Intrinsic Objects","titleHTML":"Well-Known Intrinsic Objects","number":"1.1.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"Well-Known Intrinsic Objects"},{"type":"clause","id":"sec-object-type","aoid":null,"title":"The Object Type","titleHTML":"The Object Type","number":"1.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"The Object Type"},{"type":"clause","id":"sec-ecmascript-language-types","aoid":null,"title":"ECMAScript Language Types","titleHTML":"ECMAScript Language Types","number":"1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"ECMAScript Language Types"},{"type":"clause","id":"sec-ecmascript-data-types-and-values","aoid":null,"title":"ECMAScript Data Types and Values","titleHTML":"ECMAScript Data Types and Values","number":"1","namespace":"<no location>","location":"","referencingIds":[],"key":"ECMAScript Data Types and Values"},{"type":"clause","id":"sec-native-error-types-used-in-this-standard-cancelerror","aoid":null,"title":"CancelError","titleHTML":"<ins>CancelError</ins>","number":"2.1.1.1","namespace":"<no location>","location":"","referencingIds":["_ref_0"],"key":"CancelError"},{"type":"clause","id":"sec-native-error-types-used-in-this-standard","aoid":null,"title":"Native Error Types Used in This Standard","titleHTML":"Native Error Types Used in This Standard","number":"2.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"Native Error Types Used in This Standard"},{"type":"clause","id":"sec-nativeerror","aoid":null,"title":"NativeError ( message )","titleHTML":"NativeError ( <var>message</var> )","number":"2.1.2.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"NativeError ( message )"},{"type":"clause","id":"sec-nativeerror-constructors","aoid":null,"title":"NativeError Constructors","titleHTML":"<var>NativeError</var> Constructors","number":"2.1.2.1","namespace":"<no location>","location":"","referencingIds":[],"key":"NativeError Constructors"},{"type":"clause","id":"sec-nativeerror-object-structure","aoid":null,"title":"NativeError Object Structure","titleHTML":"<var>NativeError</var> Object Structure","number":"2.1.2","namespace":"<no location>","location":"","referencingIds":[],"key":"NativeError Object Structure"},{"type":"clause","id":"sec-error-objects","aoid":null,"title":"Error Objects","titleHTML":"Error Objects","number":"2.1","namespace":"<no location>","location":"","referencingIds":[],"key":"Error Objects"},{"type":"clause","id":"sec-fundamental-objects","aoid":null,"title":"Fundamental Objects","titleHTML":"Fundamental Objects","number":"2","namespace":"<no location>","location":"","referencingIds":[],"key":"Fundamental Objects"},{"type":"table","id":"table-cancellationcapability-record-fields","number":2,"caption":"Table 2: CancellationCapability Record Fields","referencingIds":["_ref_6"],"namespace":"<no location>","location":"","key":"Table 2: CancellationCapability Record Fields"},{"type":"clause","id":"sec-cancellationcapability-records","aoid":null,"title":"CancellationCapability Records","titleHTML":"CancellationCapability Records","number":"3.1.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationCapability Records"},{"type":"clause","id":"sec-newcancellationcapability","aoid":null,"title":"NewCancellationCapability ( )","titleHTML":"NewCancellationCapability ( )","number":"3.1.1.2","namespace":"<no location>","location":"","referencingIds":[],"key":"NewCancellationCapability ( )"},{"type":"clause","id":"sec-cancellationtokensource-abstract-operations","aoid":null,"title":"CancellationTokenSource Abstract Operations","titleHTML":"CancellationTokenSource Abstract Operations","number":"3.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource Abstract Operations"},{"type":"clause","id":"sec-cancellationtokensource-jobs","aoid":null,"title":"CancellationTokenSource Jobs","titleHTML":"CancellationTokenSource Jobs","number":"3.1.2","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource Jobs"},{"type":"term","term":"%CancellationTokenSource%","refId":"sec-cancellationtokensource-constructor","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationTokenSource%"},{"type":"clause","id":"sec-cancellationtokensource","aoid":null,"title":"CancellationTokenSource ( [ linkedTokens ] )","titleHTML":"CancellationTokenSource ( [ <var>linkedTokens</var> ] )","number":"3.1.3.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource ( [ linkedTokens ] )"},{"type":"clause","id":"sec-cancellationtokensource-constructor","aoid":null,"title":"The CancellationTokenSource Constructor","titleHTML":"The CancellationTokenSource Constructor","number":"3.1.3","namespace":"<no location>","location":"","referencingIds":["_ref_1","_ref_10","_ref_12","_ref_20"],"key":"The CancellationTokenSource Constructor"},{"type":"clause","id":"sec-cancellationtokensource.prototype","aoid":null,"title":"CancellationTokenSource.prototype","titleHTML":"CancellationTokenSource.prototype","number":"3.1.4.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource.prototype"},{"type":"clause","id":"sec-properties-of-the-cancellationtokensource-constructor","aoid":null,"title":"Properties of the CancellationTokenSource Constructor","titleHTML":"Properties of the CancellationTokenSource Constructor","number":"3.1.4","namespace":"<no location>","location":"","referencingIds":[],"key":"Properties of the CancellationTokenSource Constructor"},{"type":"term","term":"%CancellationTokenSourcePrototype%","refId":"sec-properties-of-the-cancellationtokensource-prototype-object","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationTokenSourcePrototype%"},{"type":"clause","id":"sec-cancellationtokensource.prototype.cancel","aoid":null,"title":"CancellationTokenSource.prototype.cancel ()","titleHTML":"CancellationTokenSource.prototype.cancel ()","number":"3.1.5.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource.prototype.cancel ()"},{"type":"clause","id":"sec-cancellationtokensource.prototype.close","aoid":null,"title":"CancellationTokenSource.prototype.close ()","titleHTML":"CancellationTokenSource.prototype.close ()","number":"3.1.5.2","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource.prototype.close ()"},{"type":"clause","id":"sec-cancellationtokensource.prototype.constructor","aoid":null,"title":"CancellationTokenSource.prototype.constructor","titleHTML":"CancellationTokenSource.prototype.constructor","number":"3.1.5.3","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource.prototype.constructor"},{"type":"clause","id":"sec-get-cancellationtokensource.prototype.token","aoid":null,"title":"get CancellationTokenSource.prototype.token","titleHTML":"get CancellationTokenSource.prototype.token","number":"3.1.5.4","namespace":"<no location>","location":"","referencingIds":[],"key":"get CancellationTokenSource.prototype.token"},{"type":"clause","id":"sec-cancellationtokensource.prototype-@@tostringtag","aoid":null,"title":"CancellationTokenSource.prototype [ @@toStringTag ]","titleHTML":"CancellationTokenSource.prototype [ @@toStringTag ]","number":"3.1.5.5","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource.prototype [ @@toStringTag ]"},{"type":"clause","id":"sec-properties-of-the-cancellationtokensource-prototype-object","aoid":null,"title":"Properties of the CancellationTokenSource Prototype Object","titleHTML":"Properties of the CancellationTokenSource Prototype Object","number":"3.1.5","namespace":"<no location>","location":"","referencingIds":["_ref_11","_ref_19","_ref_21"],"key":"Properties of the CancellationTokenSource Prototype Object"},{"type":"table","id":"table-cancellationtokensource-slots","number":3,"caption":"Table 3: Internal Slots of CancellationTokenSource Instances","referencingIds":["_ref_7"],"namespace":"<no location>","location":"","key":"Table 3: Internal Slots of CancellationTokenSource Instances"},{"type":"clause","id":"sec-properties-of-the-cancellationtokensource-instances","aoid":null,"title":"Properties of CancellationTokenSource Instances","titleHTML":"Properties of CancellationTokenSource Instances","number":"3.1.6","namespace":"<no location>","location":"","referencingIds":[],"key":"Properties of CancellationTokenSource Instances"},{"type":"clause","id":"sec-createcancellationregistration","aoid":null,"title":"CreateCancellationRegistration ( token, callback )","titleHTML":"CreateCancellationRegistration ( <var>token</var>, <var>callback</var> )","number":"3.1.7.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CreateCancellationRegistration ( token, callback )"},{"type":"term","term":"%CancellationRegistrationPrototype%","refId":"sec-%cancellationregistrationprototype%-object","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationRegistrationPrototype%"},{"type":"clause","id":"sec-%cancellationregistrationprototype%.unregister","aoid":null,"title":"%CancellationRegistrationPrototype%.unregister ()","titleHTML":"%CancellationRegistrationPrototype%.unregister ()","number":"3.1.7.2.1","namespace":"<no location>","location":"","referencingIds":[],"key":"%CancellationRegistrationPrototype%.unregister ()"},{"type":"clause","id":"sec-%cancellationregistrationprototype%-@@tostringtag","aoid":null,"title":"%CancellationRegistrationPrototype% [ @@toStringTag ]","titleHTML":"%CancellationRegistrationPrototype% [ @@toStringTag ]","number":"3.1.7.2.2","namespace":"<no location>","location":"","referencingIds":[],"key":"%CancellationRegistrationPrototype% [ @@toStringTag ]"},{"type":"clause","id":"sec-%cancellationregistrationprototype%-object","aoid":null,"title":"The %CancellationRegistrationPrototype% Object","titleHTML":"The %CancellationRegistrationPrototype% Object","number":"3.1.7.2","namespace":"<no location>","location":"","referencingIds":["_ref_18","_ref_22"],"key":"The %CancellationRegistrationPrototype% Object"},{"type":"table","id":"table-cancellationregistration-slots","number":4,"caption":"Table 4: Internal Slots of Cancellation Registration Instances","referencingIds":["_ref_8"],"namespace":"<no location>","location":"","key":"Table 4: Internal Slots of Cancellation Registration Instances"},{"type":"clause","id":"sec-properties-of-cancellationregistration-instances","aoid":null,"title":"Properties of Cancellation Registration Instances","titleHTML":"Properties of Cancellation Registration Instances","number":"3.1.7.3","namespace":"<no location>","location":"","referencingIds":[],"key":"Properties of Cancellation Registration Instances"},{"type":"clause","id":"sec-cancellation-registration-objects","aoid":null,"title":"Cancellation Registration Objects","titleHTML":"Cancellation Registration Objects","number":"3.1.7","namespace":"<no location>","location":"","referencingIds":["_ref_5"],"key":"Cancellation Registration Objects"},{"type":"clause","id":"sec-cancellationtokensource-objects","aoid":null,"title":"CancellationTokenSource Objects","titleHTML":"<ins>CancellationTokenSource Objects</ins>","number":"3.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationTokenSource Objects"},{"type":"term","term":"%CancellationToken%","refId":"sec-cancellationtoken-constructor","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationToken%"},{"type":"clause","id":"sec-cancellationtoken","aoid":null,"title":"CancellationToken ( cancellationRequested )","titleHTML":"CancellationToken ( <var>cancellationRequested</var> )","number":"3.2.1.1","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken ( cancellationRequested )"},{"type":"clause","id":"sec-cancellationtoken-constructor","aoid":null,"title":"The CancellationToken Constructor","titleHTML":"The CancellationToken Constructor","number":"3.2.1","namespace":"<no location>","location":"","referencingIds":["_ref_2","_ref_13","_ref_15","_ref_24"],"key":"The CancellationToken Constructor"},{"type":"term","term":"%CancellationToken_canceled%","refId":"sec-cancellationtoken.canceled","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationToken_canceled%"},{"type":"clause","id":"sec-cancellationtoken.canceled","aoid":null,"title":"CancellationToken.canceled","titleHTML":"CancellationToken.canceled","number":"3.2.2.1","namespace":"<no location>","location":"","referencingIds":["_ref_3","_ref_16"],"key":"CancellationToken.canceled"},{"type":"term","term":"%CancellationToken_none%","refId":"sec-cancellationtoken.none","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationToken_none%"},{"type":"clause","id":"sec-cancellationtoken.none","aoid":null,"title":"CancellationToken.none","titleHTML":"CancellationToken.none","number":"3.2.2.2","namespace":"<no location>","location":"","referencingIds":["_ref_4","_ref_17"],"key":"CancellationToken.none"},{"type":"clause","id":"sec-cancellationtoken.prototype","aoid":null,"title":"CancellationToken.prototype","titleHTML":"CancellationToken.prototype","number":"3.2.2.3","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken.prototype"},{"type":"clause","id":"sec-properties-of-the-cancellationtoken-constructor","aoid":null,"title":"Properties of the CancellationToken Constructor","titleHTML":"Properties of the CancellationToken Constructor","number":"3.2.2","namespace":"<no location>","location":"","referencingIds":[],"key":"Properties of the CancellationToken Constructor"},{"type":"term","term":"%CancellationTokenPrototype%","refId":"sec-properties-of-the-cancellationtoken-prototype-object","referencingIds":[],"namespace":"<no location>","location":"","key":"%CancellationTokenPrototype%"},{"type":"clause","id":"sec-get-cancellationtoken.prototype.cancellationrequested","aoid":null,"title":"get CancellationToken.prototype.cancellationRequested","titleHTML":"get CancellationToken.prototype.cancellationRequested","number":"3.2.3.1","namespace":"<no location>","location":"","referencingIds":[],"key":"get CancellationToken.prototype.cancellationRequested"},{"type":"clause","id":"sec-cancellationtoken.prototype.constructor","aoid":null,"title":"CancellationToken.prototype.constructor","titleHTML":"CancellationToken.prototype.constructor","number":"3.2.3.2","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken.prototype.constructor"},{"type":"clause","id":"sec-cancellationtoken.prototype.register","aoid":null,"title":"CancellationToken.prototype.register ( onCanceled )","titleHTML":"CancellationToken.prototype.register ( <var>onCanceled</var> )","number":"3.2.3.3","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken.prototype.register ( onCanceled )"},{"type":"clause","id":"sec-cancellationtoken.prototype.throwifcancellationrequested","aoid":null,"title":"CancellationToken.prototype.throwIfCancellationRequested ()","titleHTML":"CancellationToken.prototype.throwIfCancellationRequested ()","number":"3.2.3.4","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken.prototype.throwIfCancellationRequested ()"},{"type":"clause","id":"sec-cancellationtoken.prototype-@@tostringtag","aoid":null,"title":"CancellationToken.prototype [ @@toStringTag ]","titleHTML":"CancellationToken.prototype [ @@toStringTag ]","number":"3.2.3.5","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken.prototype [ @@toStringTag ]"},{"type":"clause","id":"sec-properties-of-the-cancellationtoken-prototype-object","aoid":null,"title":"Properties of the CancellationToken Prototype Object","titleHTML":"Properties of the CancellationToken Prototype Object","number":"3.2.3","namespace":"<no location>","location":"","referencingIds":["_ref_14","_ref_23","_ref_25"],"key":"Properties of the CancellationToken Prototype Object"},{"type":"table","id":"table-cancellationtoken-slots","number":5,"caption":"Table 5: Internal Slots of CancellationToken Instances","referencingIds":["_ref_9"],"namespace":"<no location>","location":"","key":"Table 5: Internal Slots of CancellationToken Instances"},{"type":"clause","id":"sec-properties-of-the-cancellationtoken-instances","aoid":null,"title":"Properties of CancellationToken Instances","titleHTML":"Properties of CancellationToken Instances","number":"3.2.4","namespace":"<no location>","location":"","referencingIds":[],"key":"Properties of CancellationToken Instances"},{"type":"clause","id":"sec-cancellationtoken-objects","aoid":null,"title":"CancellationToken Objects","titleHTML":"<ins>CancellationToken Objects</ins>","number":"3.2","namespace":"<no location>","location":"","referencingIds":[],"key":"CancellationToken Objects"},{"type":"clause","id":"sec-control-abstraction-objects","aoid":null,"title":"Control Abstraction Objects","titleHTML":"Control Abstraction Objects","number":"3","namespace":"<no location>","location":"","referencingIds":[],"key":"Control Abstraction Objects"},{"type":"clause","id":"sec-copyright-and-software-license","aoid":null,"title":"Copyright & Software License","titleHTML":"Copyright &amp; Software License","number":"A","namespace":"<no location>","location":"","referencingIds":[],"key":"Copyright & Software License"}]</script></head><body><div id="menu-toggle">☰</div><div id="menu-spacer"></div><div id="menu"><div id="menu-search"><input type="text" id="menu-search-box" placeholder="Search..."><div id="menu-search-results" class="inactive"></div></div><div id="menu-pins"><div class="menu-pane-header">Pins</div><ul id="menu-pins-list"></ul></div><div class="menu-pane-header">Table of Contents</div><div id="menu-toc"><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-intro" title="Introduction">Introduction</a></li><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-data-types-and-values" title="ECMAScript Data Types and Values"><span class="secnum">1</span> ECMAScript Data Types and Values</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-ecmascript-language-types" title="ECMAScript Language Types"><span class="secnum">1.1</span> ECMAScript Language Types</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-object-type" title="The Object Type"><span class="secnum">1.1.1</span> The Object Type</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-well-known-intrinsic-objects" title="Well-Known Intrinsic Objects"><span class="secnum">1.1.1.1</span> Well-Known Intrinsic Objects</a></li></ol></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-fundamental-objects" title="Fundamental Objects"><span class="secnum">2</span> Fundamental Objects</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-error-objects" title="Error Objects"><span class="secnum">2.1</span> Error Objects</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-native-error-types-used-in-this-standard" title="Native Error Types Used in This Standard"><span class="secnum">2.1.1</span> Native Error Types Used in This Standard</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-native-error-types-used-in-this-standard-cancelerror" title="CancelError"><span class="secnum">2.1.1.1</span> <ins>CancelError</ins></a></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-nativeerror-object-structure" title="NativeError Object Structure"><span class="secnum">2.1.2</span> <var>NativeError</var> Object Structure</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-nativeerror-constructors" title="NativeError Constructors"><span class="secnum">2.1.2.1</span> <var>NativeError</var> Constructors</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-nativeerror" title="NativeError ( message )"><span class="secnum">2.1.2.1.1</span> NativeError ( <var>message</var> )</a></li></ol></li></ol></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-control-abstraction-objects" title="Control Abstraction Objects"><span class="secnum">3</span> Control Abstraction Objects</a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-cancellationtokensource-objects" title="CancellationTokenSource Objects"><span class="secnum">3.1</span> <ins>CancellationTokenSource Objects</ins></a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-cancellationtokensource-abstract-operations" title="CancellationTokenSource Abstract Operations"><span class="secnum">3.1.1</span> CancellationTokenSource Abstract Operations</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-cancellationcapability-records" title="CancellationCapability Records"><span class="secnum">3.1.1.1</span> CancellationCapability Records</a></li><li><span class="item-toggle-none"></span><a href="#sec-newcancellationcapability" title="NewCancellationCapability ( )"><span class="secnum">3.1.1.2</span> NewCancellationCapability ( )</a></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource-jobs" title="CancellationTokenSource Jobs"><span class="secnum">3.1.2</span> CancellationTokenSource Jobs</a></li><li><span class="item-toggle">◢</span><a href="#sec-cancellationtokensource-constructor" title="The CancellationTokenSource Constructor"><span class="secnum">3.1.3</span> The CancellationTokenSource Constructor</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource" title="CancellationTokenSource ( [ linkedTokens ] )"><span class="secnum">3.1.3.1</span> CancellationTokenSource ( [ <var>linkedTokens</var> ] )</a></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-properties-of-the-cancellationtokensource-constructor" title="Properties of the CancellationTokenSource Constructor"><span class="secnum">3.1.4</span> Properties of the CancellationTokenSource Constructor</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource.prototype" title="CancellationTokenSource.prototype"><span class="secnum">3.1.4.1</span> CancellationTokenSource.prototype</a></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-properties-of-the-cancellationtokensource-prototype-object" title="Properties of the CancellationTokenSource Prototype Object"><span class="secnum">3.1.5</span> Properties of the CancellationTokenSource Prototype Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource.prototype.cancel" title="CancellationTokenSource.prototype.cancel ()"><span class="secnum">3.1.5.1</span> CancellationTokenSource.prototype.cancel ()</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource.prototype.close" title="CancellationTokenSource.prototype.close ()"><span class="secnum">3.1.5.2</span> CancellationTokenSource.prototype.close ()</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource.prototype.constructor" title="CancellationTokenSource.prototype.constructor"><span class="secnum">3.1.5.3</span> CancellationTokenSource.prototype.constructor</a></li><li><span class="item-toggle-none"></span><a href="#sec-get-cancellationtokensource.prototype.token" title="get CancellationTokenSource.prototype.token"><span class="secnum">3.1.5.4</span> get CancellationTokenSource.prototype.token</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtokensource.prototype-@@tostringtag" title="CancellationTokenSource.prototype [ @@toStringTag ]"><span class="secnum">3.1.5.5</span> CancellationTokenSource.prototype [ @@toStringTag ]</a></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-properties-of-the-cancellationtokensource-instances" title="Properties of CancellationTokenSource Instances"><span class="secnum">3.1.6</span> Properties of CancellationTokenSource Instances</a></li><li><span class="item-toggle">◢</span><a href="#sec-cancellation-registration-objects" title="Cancellation Registration Objects"><span class="secnum">3.1.7</span> Cancellation Registration Objects</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-createcancellationregistration" title="CreateCancellationRegistration ( token, callback )"><span class="secnum">3.1.7.1</span> CreateCancellationRegistration ( <var>token</var>, <var>callback</var> )</a></li><li><span class="item-toggle">◢</span><a href="#sec-%cancellationregistrationprototype%-object" title="The %CancellationRegistrationPrototype% Object"><span class="secnum">3.1.7.2</span> The %CancellationRegistrationPrototype% Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-%cancellationregistrationprototype%.unregister" title="%CancellationRegistrationPrototype%.unregister ()"><span class="secnum">3.1.7.2.1</span> %CancellationRegistrationPrototype%.unregister ()</a></li><li><span class="item-toggle-none"></span><a href="#sec-%cancellationregistrationprototype%-@@tostringtag" title="%CancellationRegistrationPrototype% [ @@toStringTag ]"><span class="secnum">3.1.7.2.2</span> %CancellationRegistrationPrototype% [ @@toStringTag ]</a></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-properties-of-cancellationregistration-instances" title="Properties of Cancellation Registration Instances"><span class="secnum">3.1.7.3</span> Properties of Cancellation Registration Instances</a></li></ol></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-cancellationtoken-objects" title="CancellationToken Objects"><span class="secnum">3.2</span> <ins>CancellationToken Objects</ins></a><ol class="toc"><li><span class="item-toggle">◢</span><a href="#sec-cancellationtoken-constructor" title="The CancellationToken Constructor"><span class="secnum">3.2.1</span> The CancellationToken Constructor</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken" title="CancellationToken ( cancellationRequested )"><span class="secnum">3.2.1.1</span> CancellationToken ( <var>cancellationRequested</var> )</a></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-properties-of-the-cancellationtoken-constructor" title="Properties of the CancellationToken Constructor"><span class="secnum">3.2.2</span> Properties of the CancellationToken Constructor</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.canceled" title="CancellationToken.canceled"><span class="secnum">3.2.2.1</span> CancellationToken.canceled</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.none" title="CancellationToken.none"><span class="secnum">3.2.2.2</span> CancellationToken.none</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.prototype" title="CancellationToken.prototype"><span class="secnum">3.2.2.3</span> CancellationToken.prototype</a></li></ol></li><li><span class="item-toggle">◢</span><a href="#sec-properties-of-the-cancellationtoken-prototype-object" title="Properties of the CancellationToken Prototype Object"><span class="secnum">3.2.3</span> Properties of the CancellationToken Prototype Object</a><ol class="toc"><li><span class="item-toggle-none"></span><a href="#sec-get-cancellationtoken.prototype.cancellationrequested" title="get CancellationToken.prototype.cancellationRequested"><span class="secnum">3.2.3.1</span> get CancellationToken.prototype.cancellationRequested</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.prototype.constructor" title="CancellationToken.prototype.constructor"><span class="secnum">3.2.3.2</span> CancellationToken.prototype.constructor</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.prototype.register" title="CancellationToken.prototype.register ( onCanceled )"><span class="secnum">3.2.3.3</span> CancellationToken.prototype.register ( <var>onCanceled</var> )</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.prototype.throwifcancellationrequested" title="CancellationToken.prototype.throwIfCancellationRequested ()"><span class="secnum">3.2.3.4</span> CancellationToken.prototype.throwIfCancellationRequested ()</a></li><li><span class="item-toggle-none"></span><a href="#sec-cancellationtoken.prototype-@@tostringtag" title="CancellationToken.prototype [ @@toStringTag ]"><span class="secnum">3.2.3.5</span> CancellationToken.prototype [ @@toStringTag ]</a></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-properties-of-the-cancellationtoken-instances" title="Properties of CancellationToken Instances"><span class="secnum">3.2.4</span> Properties of CancellationToken Instances</a></li></ol></li></ol></li><li><span class="item-toggle-none"></span><a href="#sec-copyright-and-software-license" title="Copyright &amp; Software License"><span class="secnum">A</span> Copyright &amp; Software License</a></li></ol></div></div><div id="spec-container"><h1 class="version first">Stage 0 Draft / April 10, 2017</h1><h1 class="title">Cancellation API</h1>
 <emu-intro id="sec-intro">
     <h1>Introduction</h1>
-    <p></p>
+    <emu-import href="sec-introduction.html"><p>This proposal defines an approach to user-controlled cancellation of asynchronous operations
+through the adoption of a set of native platform objects.</p>
+<p>See  <a href="https://github.com/tc39/proposal-cancellation">the proposal repository</a> for background material and discussion.</p></emu-import>
 </emu-intro>
-<emu-annex id="sec-copyright-and-software-license">
+<emu-clause id="sec-ecmascript-data-types-and-values">
+    <h1><span class="secnum">1</span>ECMAScript Data Types and Values</h1>
+    <emu-clause id="sec-ecmascript-language-types">
+        <h1><span class="secnum">1.1</span>ECMAScript Language Types</h1>
+        <emu-clause id="sec-object-type">
+            <h1><span class="secnum">1.1.1</span>The Object Type</h1>
+            <emu-clause id="sec-well-known-intrinsic-objects">
+                <h1><span class="secnum">1.1.1.1</span>Well-Known Intrinsic Objects</h1>
+                <emu-import href="sec-well-known-intrinsic-objects-patch.html"><emu-table id="table-7" caption="Well-known Intrinsic Objects"><figure><figcaption>Table 1: Well-known Intrinsic Objects</figcaption>
+    <table>
+        <tbody>
+        <tr>
+            <th>Intrinsic Name</th>
+            <th>Global Name</th>
+            <th>ECMAScript Language Association</th>
+        </tr>
+        <tr>
+            <td><ins>%CancelError%</ins></td>
+            <td><ins><code>CancelError</code></ins></td>
+            <td><ins>The <code>CancelError</code> constructor (<emu-xref href="#sec-native-error-types-used-in-this-standard-cancelerror" id="_ref_0"><a href="#sec-native-error-types-used-in-this-standard-cancelerror">2.1.1.1</a></emu-xref>)</ins></td>
+        </tr>
+        <tr>
+            <td><ins>%CancelErrorPrototype%</ins></td>
+            <td><ins><code>CancelError.prototype</code></ins></td>
+            <td><ins>The intial value of the <code>prototype</code> data property of %CancelError%</ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-cancellationtokensource-constructor" id="_ref_10"><a href="#sec-cancellationtokensource-constructor">%CancellationTokenSource%</a></emu-xref></ins></td>
+            <td><ins><code>CancellationTokenSource</code></ins></td>
+            <td><ins>The <code>CancellationTokenSource</code> constructor (<emu-xref href="#sec-cancellationtokensource-constructor" id="_ref_1"><a href="#sec-cancellationtokensource-constructor">3.1.3</a></emu-xref>)</ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-properties-of-the-cancellationtokensource-prototype-object" id="_ref_11"><a href="#sec-properties-of-the-cancellationtokensource-prototype-object">%CancellationTokenSourcePrototype%</a></emu-xref></ins></td>
+            <td><ins><code>CancellationTokenSource.prototype</code></ins></td>
+            <td><ins>The intial value of the <code>prototype</code> data property of <emu-xref href="#sec-cancellationtokensource-constructor" id="_ref_12"><a href="#sec-cancellationtokensource-constructor">%CancellationTokenSource%</a></emu-xref></ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-cancellationtoken-constructor" id="_ref_13"><a href="#sec-cancellationtoken-constructor">%CancellationToken%</a></emu-xref></ins></td>
+            <td><ins><code>CancellationToken</code></ins></td>
+            <td><ins>The <code>CancellationToken</code> constructor (<emu-xref href="#sec-cancellationtoken-constructor" id="_ref_2"><a href="#sec-cancellationtoken-constructor">3.2.1</a></emu-xref>)</ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-properties-of-the-cancellationtoken-prototype-object" id="_ref_14"><a href="#sec-properties-of-the-cancellationtoken-prototype-object">%CancellationTokenPrototype%</a></emu-xref></ins></td>
+            <td><ins><code>CancellationToken.prototype</code></ins></td>
+            <td><ins>The intial value of the <code>prototype</code> data property of <emu-xref href="#sec-cancellationtoken-constructor" id="_ref_15"><a href="#sec-cancellationtoken-constructor">%CancellationToken%</a></emu-xref></ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-cancellationtoken.canceled" id="_ref_16"><a href="#sec-cancellationtoken.canceled">%CancellationToken_canceled%</a></emu-xref></ins></td>
+            <td><ins><code>CancellationToken.canceled</code></ins></td>
+            <td><ins>A CancellationToken instance that is already canceled (<emu-xref href="#sec-cancellationtoken.canceled" id="_ref_3"><a href="#sec-cancellationtoken.canceled">3.2.2.1</a></emu-xref>)</ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-cancellationtoken.none" id="_ref_17"><a href="#sec-cancellationtoken.none">%CancellationToken_none%</a></emu-xref></ins></td>
+            <td><ins><code>CancellationToken.none</code></ins></td>
+            <td><ins>A CancellationToken instance that can never be canceled (<emu-xref href="#sec-cancellationtoken.none" id="_ref_4"><a href="#sec-cancellationtoken.none">3.2.2.2</a></emu-xref>)</ins></td>
+        </tr>
+        <tr>
+            <td><ins><emu-xref href="#sec-%cancellationregistrationprototype%-object" id="_ref_18"><a href="#sec-%cancellationregistrationprototype%-object">%CancellationRegistrationPrototype%</a></emu-xref></ins></td>
+            <td><ins></ins></td>
+            <td><ins>The prototype for Cancellation Registration objects (<emu-xref href="#sec-cancellation-registration-objects" id="_ref_5"><a href="#sec-cancellation-registration-objects">3.1.7</a></emu-xref>)</ins></td>
+        </tr>
+        <tr>
+            <td><ins>%CancellationRegistration_empty%</ins></td>
+            <td><ins></ins></td>
+            <td><ins>A Cancellation Registration instance that performs no action</ins></td>
+        </tr>
+        </tbody>
+    </table>
+</figure></emu-table></emu-import>
+            </emu-clause>
+        </emu-clause>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-fundamental-objects">
+    <h1><span class="secnum">2</span>Fundamental Objects</h1>
+    <emu-clause id="sec-error-objects">
+        <h1><span class="secnum">2.1</span>Error Objects</h1>
+        <emu-clause id="sec-native-error-types-used-in-this-standard">
+            <h1><span class="secnum">2.1.1</span>Native Error Types Used in This Standard</h1>
+            <emu-import href="sec-native-error-types-used-in-this-standard-patch.html"><emu-clause id="sec-native-error-types-used-in-this-standard-cancelerror">
+    <h1><span class="secnum">2.1.1.1</span><ins>CancelError</ins></h1>
+    <p><ins>Indicates that an asynchronous operation was canceled.</ins></p>
+</emu-clause></emu-import>
+        </emu-clause>
+        <emu-clause id="sec-nativeerror-object-structure">
+            <h1><span class="secnum">2.1.2</span><var>NativeError</var> Object Structure</h1>
+            <emu-clause id="sec-nativeerror-constructors">
+                <h1><span class="secnum">2.1.2.1</span><var>NativeError</var> Constructors</h1>
+                <emu-clause id="sec-nativeerror">
+                    <h1><span class="secnum">2.1.2.1.1</span>NativeError ( <var>message</var> )</h1>
+                    <emu-import href="sec-nativeerror-patch.html"><p>The actual value of the string passed in step 2 is either  <ins><code>"%CancelErrorPrototype%"</code>,</ins> <code>"%EvalErrorPrototype%"</code>, <code>"%RangeErrorPrototype%"</code>, <code>"%ReferenceErrorPrototype%"</code>, 
+<code>"%SyntaxErrorPrototype%"</code>, <code>"%TypeErrorPrototype%"</code>, or <code>"%URIErrorPrototype%"</code> corresponding to which <var>NativeError</var> constructor is being defined.</p></emu-import>
+                </emu-clause> 
+            </emu-clause>
+        </emu-clause>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-control-abstraction-objects">
+    <h1><span class="secnum">3</span>Control Abstraction Objects</h1>
+    <emu-import href="sec-control-abstraction-objects-patch.html"><emu-clause id="sec-cancellationtokensource-objects">
+    <h1><span class="secnum">3.1</span><ins>CancellationTokenSource Objects</ins></h1>
+    <emu-import href="sec-cancellationtokensource-objects.html"><emu-clause id="sec-cancellationtokensource-abstract-operations">
+    <h1><span class="secnum">3.1.1</span>CancellationTokenSource Abstract Operations</h1>
+    <emu-clause id="sec-cancellationcapability-records">
+        <h1><span class="secnum">3.1.1.1</span>CancellationCapability Records</h1>
+        <p>A CancellationCapability is a <emu-xref href="#sec-list-and-record-specification-type"><a href="https://tc39.github.io/ecma262/#sec-list-and-record-specification-type">Record</a></emu-xref> value used to encapsulate cancellation state as well as any 
+            registered callbacks to execute when cancellation is requested. CancellationCapability Records 
+            are produced by the NewCancellationCapability abstract operation.</p>
+        <p>CancellationCapability Records have the fields listed in  <emu-xref href="#table-cancellationcapability-record-fields" id="_ref_6"><a href="#table-cancellationcapability-record-fields">Table 2</a></emu-xref>.</p>
+        <emu-table id="table-cancellationcapability-record-fields" caption="CancellationCapability Record Fields"><figure><figcaption>Table 2: CancellationCapability <emu-xref href="#sec-list-and-record-specification-type"><a href="https://tc39.github.io/ecma262/#sec-list-and-record-specification-type">Record</a></emu-xref> Fields</figcaption>
+            <table>
+                <tbody>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>[[CancellationState]]</td>
+                    <td>A String representing the current cancellation state. Possible values are <code>"open"</code>, <code>"cancellationRequested"</code>, and <code>"closed"</code>.</td>
+                </tr>
+                <tr>
+                    <td>[[Callbacks]]</td>
+                    <td>A <emu-xref href="#sec-list-and-record-specification-type"><a href="https://tc39.github.io/ecma262/#sec-list-and-record-specification-type">List</a></emu-xref> of Function objects to be invoked when cancellation is requested.
+                
+                </td></tr>
+                <tr>
+                    <td>[[LinkingRegistrations]]</td>
+                    <td>A <emu-xref href="#sec-list-and-record-specification-type"><a href="https://tc39.github.io/ecma262/#sec-list-and-record-specification-type">List</a></emu-xref> of CancellationTokenRegistration objects that can be used to unregister callbacks for linked tokens.</td>
+                </tr>
+                </tbody>
+            </table>
+        </figure></emu-table>
+    </emu-clause>
+    <emu-clause id="sec-newcancellationcapability">
+        <h1><span class="secnum">3.1.1.2</span>NewCancellationCapability ( )</h1>
+        <p>When the abstract operation NewCancellationCapability is called, the following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-cancellationtokensource-jobs">
+    <h1><span class="secnum">3.1.2</span>CancellationTokenSource Jobs</h1>
+</emu-clause>
+<emu-clause id="sec-cancellationtokensource-constructor">
+    <h1><span class="secnum">3.1.3</span>The CancellationTokenSource Constructor</h1>
+    <p>The CancellationTokenSource constructor is the  <dfn>%CancellationTokenSource%</dfn> intrinsic object and the 
+        initial value of the <code>CancellationTokenSource</code> property of the <emu-xref href="#global-object"><a href="https://tc39.github.io/ecma262/#global-object">global object</a></emu-xref>. When called as a 
+        constructor it creates and initializes a new CancellationTokenSource object. CancellationTokenSource 
+        is not intended to be called as a function and will throw an exception when used in that manner.</p>
+    <emu-clause id="sec-cancellationtokensource">
+        <h1><span class="secnum">3.1.3.1</span>CancellationTokenSource ( [ <var>linkedTokens</var> ] )</h1>
+        <p>When the <code>CancellationTokenSource</code> function is called with optional argument <var>linkedTokens</var>, the 
+            following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtokensource-constructor">
+    <h1><span class="secnum">3.1.4</span>Properties of the CancellationTokenSource Constructor</h1>
+    <p>The value of the [[Prototype]] internal slot of the <code>CancellationTokenSource</code> constructor is the intrinsic 
+        object <emu-xref href="#sec-properties-of-the-function-prototype-object"><a href="https://tc39.github.io/ecma262/#sec-properties-of-the-function-prototype-object">%FunctionPrototype%</a></emu-xref>.</p>
+    <p>The CancellationTokenSource constructor has the following properties:</p>
+    <emu-clause id="sec-cancellationtokensource.prototype">
+        <h1><span class="secnum">3.1.4.1</span>CancellationTokenSource.prototype</h1>
+        <p>The initial value of <code>CancellationTokenSource.prototype</code> is the intrinsic object <emu-xref href="#sec-properties-of-the-cancellationtokensource-prototype-object" id="_ref_19"><a href="#sec-properties-of-the-cancellationtokensource-prototype-object">%CancellationTokenSourcePrototype%</a></emu-xref>.</p>
+        <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>false</emu-val> }.</p>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtokensource-prototype-object">
+    <h1><span class="secnum">3.1.5</span>Properties of the CancellationTokenSource Prototype Object</h1>
+    <p>The CancellationTokenSource prototype object is the intrinsic object  <dfn>%CancellationTokenSourcePrototype%</dfn>. 
+        The value of the [[Prototype]] internal slot of the CancellationTokenSource prototype object is the 
+        intrinsic object <emu-xref href="#sec-properties-of-the-object-prototype-object"><a href="https://tc39.github.io/ecma262/#sec-properties-of-the-object-prototype-object">%ObjectPrototype%</a></emu-xref>. The CancellationTokenSource prototype object is an ordinary object. 
+        It does not have either of the [[CancellationSource]] or [[CancellationToken]] internal slots.</p>
+    <emu-clause id="sec-cancellationtokensource.prototype.cancel">
+        <h1><span class="secnum">3.1.5.1</span>CancellationTokenSource.prototype.cancel ()</h1>
+        <p>When the <code>cancel</code> method is called, the following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtokensource.prototype.close">
+        <h1><span class="secnum">3.1.5.2</span>CancellationTokenSource.prototype.close ()</h1>
+        <p>When the <code>close</code> method is called, the following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtokensource.prototype.constructor">
+        <h1><span class="secnum">3.1.5.3</span>CancellationTokenSource.prototype.constructor</h1>
+        <p>The initial value of <code>CancellationTokenSource.prototype.constructor</code> is the intrinsic object <emu-xref href="#sec-cancellationtokensource-constructor" id="_ref_20"><a href="#sec-cancellationtokensource-constructor">%CancellationTokenSource%</a></emu-xref>.</p>
+    </emu-clause>
+    <emu-clause id="sec-get-cancellationtokensource.prototype.token">
+        <h1><span class="secnum">3.1.5.4</span>get CancellationTokenSource.prototype.token</h1>
+        <p><code>CancellationTokenSource.prototype.token</code> is an accessor property whose set accessor function is <emu-val>undefined</emu-val>.
+            Its get accessor function performs the following steps:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtokensource.prototype-@@tostringtag">
+        <h1><span class="secnum">3.1.5.5</span>CancellationTokenSource.prototype [ @@toStringTag ]</h1>
+        <p>The initial value of the @@toStringTag property is the String value <code>"CancellationTokenSource"</code>.</p>
+        <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>true</emu-val> }.</p>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtokensource-instances">
+    <h1><span class="secnum">3.1.6</span>Properties of CancellationTokenSource Instances</h1>
+    <p>CancellationTokenSource instances are ordinary objects that inherit from the CancellationTokenSource 
+        prototype object (the intrinsic <emu-xref href="#sec-properties-of-the-cancellationtokensource-prototype-object" id="_ref_21"><a href="#sec-properties-of-the-cancellationtokensource-prototype-object">%CancellationTokenSourcePrototype%</a></emu-xref>). CancellationTokenSource instances 
+        are initially created with the internal slots described in  <emu-xref href="#table-cancellationtokensource-slots" id="_ref_7"><a href="#table-cancellationtokensource-slots">Table 3</a></emu-xref>.</p>
+    <emu-table id="table-cancellationtokensource-slots" caption="Internal Slots of CancellationTokenSource Instances"><figure><figcaption>Table 3: Internal Slots of CancellationTokenSource Instances</figcaption>
+        <table>
+            <tbody>
+            <tr>
+                <th>Internal Slot</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>[[CancellationSource]]</td>
+                <td>A CancellationCapability record containing the cancellation state of the source.</td>
+            </tr>
+            <tr>
+                <td>[[CancellationToken]]</td>
+                <td>A CancellationToken instance entangled with the source, sharing the same CancellationCapability record.</td>
+            </tr>
+            </tbody>
+        </table>
+    </figure></emu-table>
+</emu-clause>
+<emu-clause id="sec-cancellation-registration-objects">
+    <h1><span class="secnum">3.1.7</span>Cancellation Registration Objects</h1>
+    <p>A Cancellation Registration is an object that provides the capability to unregister a callback 
+        registered to some CancellationToken object. There is not a named constructor for Cancellation
+        Registration objects. Instead, Cancellation Registration objects are created by calling certain
+        methods of CancellationToken instance objects.</p>
+    <emu-clause id="sec-createcancellationregistration">
+        <h1><span class="secnum">3.1.7.1</span>CreateCancellationRegistration ( <var>token</var>, <var>callback</var> )</h1>
+        <p>When CreateCancellationRegistration is called with arguments <var>token</var> and <var>callback</var> the following
+            steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-%cancellationregistrationprototype%-object">
+        <h1><span class="secnum">3.1.7.2</span>The %CancellationRegistrationPrototype% Object</h1>
+        <p>The  <dfn>%CancellationRegistrationPrototype%</dfn> object is an orderinary object and its
+            [[Prototype]] internal slot is the <emu-xref href="#sec-properties-of-the-object-prototype-object"><a href="https://tc39.github.io/ecma262/#sec-properties-of-the-object-prototype-object">%ObjectPrototype%</a></emu-xref> intrinsic object. In addition, 
+            %CancellationRegistrationPrototype% has the following properties:</p>
+        <emu-clause id="sec-%cancellationregistrationprototype%.unregister">
+            <h1><span class="secnum">3.1.7.2.1</span>%CancellationRegistrationPrototype%.unregister ()</h1>
+            <p>When the <code>unregister</code> method is called, the following steps are taken:</p>
+            <emu-alg><p>1.
+            </p></emu-alg>
+        </emu-clause>
+        <emu-clause id="sec-%cancellationregistrationprototype%-@@tostringtag">
+            <h1><span class="secnum">3.1.7.2.2</span>%CancellationRegistrationPrototype% [ @@toStringTag ]</h1>
+            <p>The initial value of the @@toStringTag property is the String value <code>"CancellationToken Registration"</code>.</p>
+            <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>true</emu-val> }.</p>
+        </emu-clause>
+    </emu-clause>
+    <emu-clause id="sec-properties-of-cancellationregistration-instances">
+        <h1><span class="secnum">3.1.7.3</span>Properties of Cancellation Registration Instances</h1>
+        <p>Cancellation Registration instances are ordinary objects that inherit properties from the 
+            <emu-xref href="#sec-%cancellationregistrationprototype%-object" id="_ref_22"><a href="#sec-%cancellationregistrationprototype%-object">%CancellationRegistrationPrototype%</a></emu-xref> intrinsic object. Cancellation Registration instances
+            are initially created with the internal slots listed in 
+             
+            <emu-xref href="#table-cancellationregistration-slots" id="_ref_8"><a href="#table-cancellationregistration-slots">Table 4</a></emu-xref>.</p>
+        <emu-table id="table-cancellationregistration-slots" caption="Internal Slots of Cancellation Registration Instances"><figure><figcaption>Table 4: Internal Slots of Cancellation Registration Instances</figcaption>
+            <table>
+                <tbody>
+                <tr>
+                    <th>Internal Slot</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>[[CancellationSource]]</td>
+                    <td>The CancellationCapability record for the token to which this registration is associated.</td>
+                </tr>
+                <tr>
+                    <td>[[Callback]]</td>
+                    <td>A Function object to execute when cancellation is requested.</td>
+                </tr>
+                </tbody>
+            </table>
+        </figure></emu-table>
+    </emu-clause>
+</emu-clause></emu-import>
+</emu-clause>
+<emu-clause id="sec-cancellationtoken-objects">
+    <h1><span class="secnum">3.2</span><ins>CancellationToken Objects</ins></h1>
+    <emu-import href="sec-cancellationtoken-objects.html"><emu-clause id="sec-cancellationtoken-constructor">
+    <h1><span class="secnum">3.2.1</span>The CancellationToken Constructor</h1>
+    <p>The CancellationToken constructor is the  <dfn>%CancellationToken%</dfn> intrinsic object and the initial value 
+        of the <code>CancellationToken</code> property of the <emu-xref href="#global-object"><a href="https://tc39.github.io/ecma262/#global-object">global object</a></emu-xref>. When called as a constructor it creates
+        and initializes a new CancellationToken object. CancellationToken is not intended to be called as 
+        a function and will throw an exception when used in that manner.</p>
+    <emu-clause id="sec-cancellationtoken">
+        <h1><span class="secnum">3.2.1.1</span>CancellationToken ( <var>cancellationRequested</var> )</h1>
+        <p>When the <code>CancellationToken</code> function is called with argument <var>cancellationRequested</var>, the following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtoken-constructor">
+    <h1><span class="secnum">3.2.2</span>Properties of the CancellationToken Constructor</h1>
+    <p>The value of the [[Prototype]] internal slot of the <code>CancellationToken</code> constructor is the intrinsic object <emu-xref href="#sec-properties-of-the-function-prototype-object"><a href="https://tc39.github.io/ecma262/#sec-properties-of-the-function-prototype-object">%FunctionPrototype%</a></emu-xref>.</p>
+    <p>The CancellationToken constructor has the following properties:</p>
+    <emu-clause id="sec-cancellationtoken.canceled">
+        <h1><span class="secnum">3.2.2.1</span>CancellationToken.canceled</h1>
+        <p>The initial value of <code>CancellationToken.canceled</code> is the intrinsic object  <dfn>%CancellationToken_canceled%</dfn>.</p>
+        <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>false</emu-val> }.</p>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtoken.none">
+        <h1><span class="secnum">3.2.2.2</span>CancellationToken.none</h1>
+        <p>The initial value of <code>CancellationToken.none</code> is the intrinsic object  <dfn>%CancellationToken_none%</dfn>.</p>
+        <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>false</emu-val> }.</p>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtoken.prototype">
+        <h1><span class="secnum">3.2.2.3</span>CancellationToken.prototype</h1>
+        <p>The initial value of <code>CancellationToken.prototype</code> is the intrinsic object <emu-xref href="#sec-properties-of-the-cancellationtoken-prototype-object" id="_ref_23"><a href="#sec-properties-of-the-cancellationtoken-prototype-object">%CancellationTokenPrototype%</a></emu-xref>.</p>
+        <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>false</emu-val> }.</p>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtoken-prototype-object">
+    <h1><span class="secnum">3.2.3</span>Properties of the CancellationToken Prototype Object</h1>
+    <p>The CancellationToken prototype object is the intrinsic object  <dfn>%CancellationTokenPrototype%</dfn>. The value of the 
+        [[Prototype]] internal slot of the CancellationToken prototype object is the intrinsic object 
+        <emu-xref href="#sec-properties-of-the-object-prototype-object"><a href="https://tc39.github.io/ecma262/#sec-properties-of-the-object-prototype-object">%ObjectPrototype%</a></emu-xref>. The CancellationToken prototype object is an ordinary object. It does not have a 
+        [[CancellationSource]] internal slot.</p>
+    <emu-clause id="sec-get-cancellationtoken.prototype.cancellationrequested">
+        <h1><span class="secnum">3.2.3.1</span>get CancellationToken.prototype.cancellationRequested</h1>
+        <p><code>CancellationToken.prototype.cancellationRequested</code> is an accessor property whose set accessor function is <emu-val>undefined</emu-val>.
+            Its get accessor function performs the following steps:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtoken.prototype.constructor">
+        <h1><span class="secnum">3.2.3.2</span>CancellationToken.prototype.constructor</h1>
+        <p>The initial value of <code>CancellationToken.prototype.constructor</code> is the intrinsic object <emu-xref href="#sec-cancellationtoken-constructor" id="_ref_24"><a href="#sec-cancellationtoken-constructor">%CancellationToken%</a></emu-xref>.</p>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtoken.prototype.register">
+        <h1><span class="secnum">3.2.3.3</span>CancellationToken.prototype.register ( <var>onCanceled</var> )</h1>
+        <p>When the <code>register</code> method is called with argument <var>onCanceled</var>, the following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtoken.prototype.throwifcancellationrequested">
+        <h1><span class="secnum">3.2.3.4</span>CancellationToken.prototype.throwIfCancellationRequested ()</h1>
+        <p>When the <code>throwIfCancellationRequested</code> method is called, the following steps are taken:</p>
+        <emu-alg><p>1.
+        </p></emu-alg>
+    </emu-clause>
+    <emu-clause id="sec-cancellationtoken.prototype-@@tostringtag">
+        <h1><span class="secnum">3.2.3.5</span>CancellationToken.prototype [ @@toStringTag ]</h1>
+        <p>The initial value of the @@toStringTag property is the String value <code>"CancellationToken"</code>.</p>
+        <p>This property has the attributes { [[Writable]]: <emu-val>false</emu-val>, [[Enumerable]]: <emu-val>false</emu-val>, [[Configurable]]: <emu-val>true</emu-val> }.</p>
+    </emu-clause>
+</emu-clause>
+<emu-clause id="sec-properties-of-the-cancellationtoken-instances">
+    <h1><span class="secnum">3.2.4</span>Properties of CancellationToken Instances</h1>
+    <p>CancellationToken instances are ordinary objects that inherit from the CancellationToken prototype object 
+        (the intrinsic <emu-xref href="#sec-properties-of-the-cancellationtoken-prototype-object" id="_ref_25"><a href="#sec-properties-of-the-cancellationtoken-prototype-object">%CancellationTokenPrototype%</a></emu-xref>). CancellationToken instances are initially created with the 
+        internal slots described in  <emu-xref href="#table-cancellationtoken-slots" id="_ref_9"><a href="#table-cancellationtoken-slots">Table 5</a></emu-xref>.</p>
+    <emu-table id="table-cancellationtoken-slots" caption="Internal Slots of CancellationToken Instances"><figure><figcaption>Table 5: Internal Slots of CancellationToken Instances</figcaption>
+        <table>
+            <tbody>
+            <tr>
+                <th>Internal Slot</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>[[CancellationSource]]</td>
+                <td>A CancellationCapability record containing the cancellation state of the token.</td>
+            </tr>
+            </tbody>
+        </table>
+    </figure></emu-table>
+</emu-clause>
+</emu-import>
+</emu-clause></emu-import>
+</emu-clause><emu-annex id="sec-copyright-and-software-license">
       <h1><span class="secnum">A</span>Copyright &amp; Software License</h1>
       
       <h2>Copyright Notice</h2>

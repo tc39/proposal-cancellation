@@ -302,19 +302,13 @@ An error thrown when an operation is canceled.
 #### Syntax
 ```ts
 class CancelError extends Error {
-    constructor(token: CancellationToken, message?: string);
-    readonly token: CancellationToken;
+    constructor(message?: string);
 }
 ```
 
 ### new CancelError(message?)
 Initializes a new instance of the CancelError class.
-* `token` [&lt;CancellationToken&gt;](#class-cancellationtoken) The token that was canceled.
 * `message` [&lt;String&gt;][String] An optional message for the error.
-
-### error.token
-The token that was canceled.
-* Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
 
 # Examples
 The following examples demonstrate some of the key concepts of the `CancellationTokenSource` and `CancellationToken`:
