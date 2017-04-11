@@ -181,7 +181,7 @@
                 1. Let _registration_ be ? CreateCancellationRegistration(_source_, _onCanceled_).
                 1. Let _state_ be GetCancellationState(_token_).
                 1. If _state_ is `"closed"`, return _registration_.
-                1. If _state_ is `"cancellationRequested", then
+                1. If _state_ is `"cancellationRequested"`, then
                     1. Let _reaction_ be CancellationReaction { [[Capability]]: *undefined*, 
                     [[Handler]]: _onCanceled_ }.
                     1. Perform TriggerCancellationReactions(&laquo; _reaction_ &raquo;, 
