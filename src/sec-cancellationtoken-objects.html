@@ -31,9 +31,9 @@
                 1. Let _state_ be _token_.[[CancellationTokenState]].
                 1. If _state_ is `"entangled"`, then
                     1. Let _source_ be _token_.[[CancellationTokenSource]].
-                    1. Set _state_ to _source_.[[CancellationState]].
+                    1. Let _state_ be _source_.[[CancellationState]].
                 1. Return _state_.
-            </emu-alg>        
+            </emu-alg>
         </emu-clause>
 
     </emu-clause>
@@ -184,7 +184,7 @@
                 1. If _state_ is `"cancellationRequested", then
                     1. Let _reaction_ be CancellationReaction { [[Capability]]: *undefined*, 
                     [[Handler]]: _onCanceled_ }.
-                    1. Perform TriggerCancellation(&laquo; _reaction_ &raquo;, 
+                    1. Perform TriggerCancellationReactions(&laquo; _reaction_ &raquo;, 
                     *undefined*).
                 1. Else,
                     1. Assert: _state_ is `"open"`.
