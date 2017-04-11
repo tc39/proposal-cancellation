@@ -1,138 +1,258 @@
-<emu-clause id="sec-cancellationtoken-abstract-operations">
-    <h1>CancellationToken Abstract Operations</h1>
-    <emu-clause id="sec-iscancellationtoken" aoid="IsCancellationToken">
-        <h1>IsCancellationToken ( _x_ )</h1>
-        <p>The abstract operation IsCancellationToken checks for the CancellationToken brand on an object.</p>
-        <emu-alg>
-            1. If Type(_x_) is not Object, return *false*.
-            1. If _x_ does not have a [[CancellationTokenSource]] internal slot, return *false*.
-            1. Return *true*.
-        </emu-alg>
+<emu-clause id="sec-cancellationtoken-objects">
+    <h1><ins>CancellationToken Objects</ins></h1>
+    <p>
+        A CancellationToken is an object that receives a cancellation signal from an entangled
+        CancellationTokenSource (<emu-xref href="#sec-cancellationtokensource-objects"></emu-xref>).
+    </p>
+    <emu-clause id="sec-cancellationtoken-abstract-operations">
+        <h1>CancellationToken Abstract Operations</h1>
+
+        <emu-clause id="sec-iscancellationtoken" aoid="IsCancellationToken">
+            <h1>IsCancellationToken ( _x_ )</h1>
+            <p>
+                The abstract operation IsCancellationToken checks for the CancellationToken brand on an 
+                object.
+            </p>
+            <emu-alg>
+                1. If Type(_x_) is not Object, return *false*.
+                1. If _x_ does not have a [[CancellationTokenState]] internal slot, return *false*.
+                1. Return *true*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-getcancellationstate" aoid="GetCancellationState">
+            <h1>GetCancellationState ( _token_ )</h1>
+            <p>
+                When GetCancellationState is called with argument _token_, the following steps are 
+                taken:
+            </p>
+            <emu-alg>
+                1. Assert: IsCancellationToken(_token_) is *true*.
+                1. Let _state_ be _token_.[[CancellationTokenState]].
+                1. If _state_ is `"entangled"`, then
+                    1. Let _source_ be _token_.[[CancellationTokenSource]].
+                    1. Set _state_ to _source_.[[CancellationState]].
+                1. Return _state_.
+            </emu-alg>        
+        </emu-clause>
+
     </emu-clause>
-</emu-clause>
-<emu-clause id="sec-cancellationtoken-constructor">
-    <h1>The CancellationToken Constructor</h1>
-    <p>The CancellationToken constructor is the <dfn>%CancellationToken%</dfn> intrinsic object and the initial value 
-        of the `CancellationToken` property of the global object. When called as a constructor it creates
-        and initializes a new CancellationToken object. CancellationToken is not intended to be called as 
-        a function and will throw an exception when used in that manner.</p>
-    <emu-clause id="sec-cancellationtoken">
-        <h1>CancellationToken ( _cancellationRequested_ )</h1>
-        <p>When the `CancellationToken` function is called with argument _cancellationRequested_, the following steps are taken:</p>
-        <emu-alg>
-            1. If NewTarget is *undefined*, throw a *TypeError* exception.
-            1. Let _b_ be ToBoolean(_cancellationRequested_).
-            1. If _b_ is *true*, return %CancellationToken_canceled%.
-            1. Return %CancellationToken_none%.
-        </emu-alg>
+
+    <emu-clause id="sec-cancellationtoken-constructor">
+        <h1>The CancellationToken Constructor</h1>
+        <p>
+            The CancellationToken constructor is the <dfn>%CancellationToken%</dfn> intrinsic object and 
+            the initial value of the `CancellationToken` property of the global object. When called as 
+            a constructor it creates and initializes a new CancellationToken object. CancellationToken 
+            is not intended to be called as a function and will throw an exception when used in that 
+            manner.
+        </p>
+
+        <emu-clause id="sec-cancellationtoken">
+            <h1>CancellationToken ( _cancellationRequested_ )</h1>
+            <p>
+                When the `CancellationToken` function is called with argument _cancellationRequested_, 
+                the following steps are taken:
+            </p>
+            <emu-alg>
+                1. If NewTarget is *undefined*, throw a *TypeError* exception.
+                1. Let _b_ be ToBoolean(_cancellationRequested_).
+                1. Let _token_ be ? ObjectCreate(%CancellationTokenPrototype%, &laquo; 
+                [[CancellationTokenSource]], [[CancellationTokenState]] &raquo;).
+                1. Set _token_.[[CancellationTokenSource]] to *undefined*.
+                1. If _b_ is *true*, then
+                    1. Set _token_.[[CancellationTokenState]] to `"cancellationRequested"`.
+                1. Else,
+                    1. Set _token_.[[CancellationTokenState]] to `"closed"`.
+                1. Return _token_.
+            </emu-alg>
+        </emu-clause>
+
     </emu-clause>
-</emu-clause>
-<emu-clause id="sec-properties-of-the-cancellationtoken-constructor">
-    <h1>Properties of the CancellationToken Constructor</h1>
-    <p>The value of the [[Prototype]] internal slot of the `CancellationToken` constructor is the intrinsic object %FunctionPrototype%.</p>
-    <p>The CancellationToken constructor has the following properties:</p>
-    <emu-clause id="sec-cancellationtoken.canceled">
-        <h1>CancellationToken.canceled</h1>
-        <p>The initial value of `CancellationToken.canceled` is the intrinsic object <dfn>%CancellationToken_canceled%</dfn>, 
-            which is a CancellationToken instance whose [[CancellationTokenSource]] internal slot has the value
-            %CancellationTokenSource_canceled%.</p>
-        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+
+    <emu-clause id="sec-properties-of-the-cancellationtoken-constructor">
+        <h1>Properties of the CancellationToken Constructor</h1>
+        <p>
+            The value of the [[Prototype]] internal slot of the `CancellationToken` constructor is the 
+            intrinsic object %FunctionPrototype%.
+        </p>
+        <p>
+            The CancellationToken constructor has the following properties:
+        </p>
+
+        <emu-clause id="sec-cancellationtoken.canceled">
+            <h1>CancellationToken.canceled</h1>
+            <p>
+                The initial value of `CancellationToken.canceled` is the intrinsic object 
+                <dfn>%CancellationToken_canceled%</dfn>, which is a CancellationToken instance whose 
+                [[CancellationTokenState]] internal slot has the String value `"cancellationRequested"`.
+            </p>
+            <p>
+                This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                [[Configurable]]: *false* }.
+            </p>
+        </emu-clause>
+        
+        <emu-clause id="sec-cancellationtoken.none">
+            <h1>CancellationToken.none</h1>
+            <p>
+                The initial value of `CancellationToken.none` is the intrinsic object 
+                <dfn>%CancellationToken_none%</dfn>, which is a CancellationToken instance whose 
+                [[CancellationTokenState]] internal slot has the String value `"closed"`.
+            </p>
+            <p>
+                This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                [[Configurable]]: *false* }.
+            </p>
+        </emu-clause>
+        
+        <emu-clause id="sec-cancellationtoken.prototype">
+            <h1>CancellationToken.prototype</h1>
+            <p>
+                The initial value of `CancellationToken.prototype` is the intrinsic object 
+                %CancellationTokenPrototype%.
+            </p>
+            <p>
+                This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                [[Configurable]]: *false* }.
+            </p>
+        </emu-clause>
+
     </emu-clause>
-    <emu-clause id="sec-cancellationtoken.none">
-        <h1>CancellationToken.none</h1>
-        <p>The initial value of `CancellationToken.none` is the intrinsic object <dfn>%CancellationToken_none%</dfn>, 
-            which is a CancellationToken instance whose [[CancellationTokenSource]] internal slot has the value
-            %CancellationTokenSource_closed%.</p>
-        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+
+    <emu-clause id="sec-properties-of-the-cancellationtoken-prototype-object">
+        <h1>Properties of the CancellationToken Prototype Object</h1>
+        <p>
+            The CancellationToken prototype object is the intrinsic object 
+            <dfn>%CancellationTokenPrototype%</dfn>. The value of the [[Prototype]] internal slot of the 
+            CancellationToken prototype object is the intrinsic object %ObjectPrototype%. The 
+            CancellationToken prototype object is an ordinary object. It does not have either of the 
+            [[CancellationTokenState]] or [[CancellationTokenSource]] internal slots.
+        </p>
+
+        <emu-clause id="sec-get-cancellationtoken.prototype.canBeCanceled">
+            <h1>get CancellationToken.prototype.canBeCanceled</h1>
+            <p>
+                `CancellationToken.prototype.canBeCanceled` is an accessor property whose set accessor 
+                function is *undefined*. Its get accessor function performs the following steps:
+            </p>
+            <emu-alg>
+                1. Let _token_ be the *this* value.
+                1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
+                1. If GetCancellationState(_token_) is `"open"`, return *true*.
+                1. Return *false*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-get-cancellationtoken.prototype.cancellationrequested">
+            <h1>get CancellationToken.prototype.cancellationRequested</h1>
+            <p>
+                `CancellationToken.prototype.cancellationRequested` is an accessor property whose set 
+                accessor function is *undefined*. Its get accessor function performs the following 
+                steps:
+            </p>
+            <emu-alg>
+                1. Let _token_ be the *this* value.
+                1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
+                1. If GetCancellationState(_token_) is `"cancellationRequested"`, return *true*.
+                1. Return *false*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtoken.prototype.constructor">
+            <h1>CancellationToken.prototype.constructor</h1>
+            <p>
+                The initial value of `CancellationToken.prototype.constructor` is the intrinsic object 
+                %CancellationToken%.
+            </p>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtoken.prototype.register">
+            <h1>CancellationToken.prototype.register ( _onCanceled_ )</h1>
+            <p>
+                When the `register` method is called with argument _onCanceled_, the following steps are 
+                taken:
+            </p>
+            <emu-alg>
+                1. Let _token_ be the *this* value.
+                1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
+                1. If IsCallable(_onCanceled_) is *false*, throw a *TypeError* exception.
+                1. Let _source_ be _token_.[[CancellationTokenSource]].
+                1. Let _registration_ be ? CreateCancellationRegistration(_source_, _onCanceled_).
+                1. Let _state_ be GetCancellationState(_token_).
+                1. If _state_ is `"closed"`, return _registration_.
+                1. If _state_ is `"cancellationRequested", then
+                    1. Let _reaction_ be CancellationReaction { [[Capability]]: *undefined*, 
+                    [[Handler]]: _onCanceled_ }.
+                    1. Perform TriggerCancellation(&laquo; _reaction_ &raquo;, 
+                    *undefined*).
+                1. Else,
+                    1. Assert: _state_ is `"open"`.
+                    1. Append _registration_ as the last element of _source_.[[Registrations]].
+                1. Return _registration_.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtoken.prototype.throwifcancellationrequested">
+            <h1>CancellationToken.prototype.throwIfCancellationRequested ()</h1>
+            <p>
+                When the `throwIfCancellationRequested` method is called, the following steps are taken:
+            </p>
+            <emu-alg>
+                1. Let _token_ be the *this* value.
+                1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
+                1. If GetCancellationState(_token_) is `"cancellationRequested"`, then
+                    1. Let _error_ be a new *CancelError* exception.
+                    1. Perform ? CreateDataProperty(_error_, `"token"`, _token_).
+                    1. Throw _error_.
+                1. Return *undefined*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtoken.prototype-@@tostringtag">
+            <h1>CancellationToken.prototype [ @@toStringTag ]</h1>
+            <p>
+                The initial value of the @@toStringTag property is value 
+                `"CancellationToken"`.
+            </p>
+            <p>
+                This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                [[Configurable]]: *true* }.
+            </p>
+        </emu-clause>
     </emu-clause>
-    <emu-clause id="sec-cancellationtoken.prototype">
-        <h1>CancellationToken.prototype</h1>
-        <p>The initial value of `CancellationToken.prototype` is the intrinsic object %CancellationTokenPrototype%.</p>
-        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+
+    <emu-clause id="sec-properties-of-cancellationtoken-instances">
+        <h1>Properties of CancellationToken Instances</h1>
+        <p>
+            CancellationToken instances are ordinary objects that inherit from the CancellationToken 
+            prototype object (the intrinsic %CancellationTokenPrototype%). CancellationToken instances 
+            are initially created with the internal slots described in 
+            <emu-xref href="#table-cancellationtoken-slots"></emu-xref>.
+        </p>
+        <emu-table id="table-cancellationtoken-slots" 
+            caption="Internal Slots of CancellationToken Instances">
+            <table>
+                <tbody>
+                <tr>
+                    <th>Internal Slot</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>[[CancellationTokenSource]]</td>
+                    <td>
+                        The CancellationTokenSource instance to which the token is entangled.
+                    </td>
+                </tr>
+                <tr>
+                    <td>[[CancellationTokenState]]</td>
+                    <td>
+                        A String value indicating the current state of the token. Possible values 
+                        include `"entangled"`, `"cancellationRequested"`, and `"closed"`.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </emu-table>
     </emu-clause>
-</emu-clause>
-<emu-clause id="sec-properties-of-the-cancellationtoken-prototype-object">
-    <h1>Properties of the CancellationToken Prototype Object</h1>
-    <p>The CancellationToken prototype object is the intrinsic object <dfn>%CancellationTokenPrototype%</dfn>. The value of the 
-        [[Prototype]] internal slot of the CancellationToken prototype object is the intrinsic object 
-        %ObjectPrototype%. The CancellationToken prototype object is an ordinary object. It does not have a 
-        [[CancellationTokenCapability]] internal slot.</p>
-    <emu-clause id="sec-get-cancellationtoken.prototype.canBeCanceled">
-        <h1>get CancellationToken.prototype.canBeCanceled</h1>
-        <p>`CancellationToken.prototype.canBeCanceled` is an accessor property whose set accessor function is *undefined*.
-            Its get accessor function performs the following steps:</p>
-        <emu-alg>
-            1. Let _token_ be the *this* value.
-            1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-            1. Let _source_ be _token_.[[CancellationTokenSource]].
-            1. If _source_.[[CancellationState]] is the String `"open"`, return *true*.
-            1. Return *false*.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-get-cancellationtoken.prototype.cancellationrequested">
-        <h1>get CancellationToken.prototype.cancellationRequested</h1>
-        <p>`CancellationToken.prototype.cancellationRequested` is an accessor property whose set accessor function is *undefined*.
-            Its get accessor function performs the following steps:</p>
-        <emu-alg>
-            1. Let _token_ be the *this* value.
-            1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-            1. Let _source_ be _token_.[[CancellationTokenSource]].
-            1. If _source_.[[CancellationState]] is the String `"cancellationRequested"`, return *true*.
-            1. Return *false*.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtoken.prototype.constructor">
-        <h1>CancellationToken.prototype.constructor</h1>
-        <p>The initial value of `CancellationToken.prototype.constructor` is the intrinsic object %CancellationToken%.</p>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtoken.prototype.register">
-        <h1>CancellationToken.prototype.register ( _onCanceled_ )</h1>
-        <p>When the `register` method is called with argument _onCanceled_, the following steps are taken:</p>
-        <emu-alg>
-            1. Let _token_ be the *this* value.
-            1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-            1. If IsCallable(_onCanceled_) is *false*, throw a *TypeError* exception.
-            1. Let _source_ be _token_.[[CancellationTokenSource]].
-            1. If _source_.[[CancellationState]] is the String `"closed"`, return %CancellationRegistration_empty%.
-            1. Let _registration_ be ? CreateCancellationRegistration(_source_, _onCanceled_).
-            1. If _source_.[[CancellationState]] is the String `"cancellationRequested", then
-                1. Perform TriggerCancellationReactions(&laquo; _registration_ &raquo;).
-            1. return _registration_.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtoken.prototype.throwifcancellationrequested">
-        <h1>CancellationToken.prototype.throwIfCancellationRequested ()</h1>
-        <p>When the `throwIfCancellationRequested` method is called, the following steps are taken:</p>
-        <emu-alg>
-            1. Let _token_ be the *this* value.
-            1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-            1. Let _source_ be _token_.[[CancellationTokenSource]].
-            1. If _source_.[[CancellationState]] is the String `"cancellationRequested"`, throw a new *CancelError* exception.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtoken.prototype-@@tostringtag">
-        <h1>CancellationToken.prototype [ @@toStringTag ]</h1>
-        <p>The initial value of the @@toStringTag property is the String value `"CancellationToken"`.</p>
-        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
-    </emu-clause>
-</emu-clause>
-<emu-clause id="sec-properties-of-the-cancellationtoken-instances">
-    <h1>Properties of CancellationToken Instances</h1>
-    <p>CancellationToken instances are ordinary objects that inherit from the CancellationToken prototype object 
-        (the intrinsic %CancellationTokenPrototype%). CancellationToken instances are initially created with the 
-        internal slots described in <emu-xref href="#table-cancellationtoken-slots"></emu-xref>.</p>
-    <emu-table id="table-cancellationtoken-slots" caption="Internal Slots of CancellationToken Instances">
-        <table>
-            <tbody>
-            <tr>
-                <th>Internal Slot</th>
-                <th>Description</th>
-            </tr>
-            <tr>
-                <td>[[CancellationTokenSource]]</td>
-                <td>The CancellationTokenSource to which the token is linked.</td>
-            </tr>
-            </tbody>
-        </table>
-    </emu-table>
 </emu-clause>

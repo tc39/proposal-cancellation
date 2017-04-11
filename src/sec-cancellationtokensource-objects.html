@@ -1,232 +1,405 @@
-<emu-clause id="sec-cancellationtokensource-abstract-operations">
-    <h1>CancellationTokenSource Abstract Operations</h1>
-    <emu-clause id="sec-createcancelingfunction" aoid="CreateCancelingFunction">
-        <h1>CreateCancelingFunction ( _source_ )</h1>
-    </emu-clause>
-    <emu-clause id="sec-cancelsource" aoid="CancelSource">
-        <h1>CancelSource ( _source_, [ _promiseCapability_ ] )</h1>
-    </emu-clause>
-    <emu-clause id="sec-closesource" aoid="CloseSource">
-        <h1>CloseSource ( _source_ )</h1>
-    </emu-clause>
-    <emu-clause id="sec-iscancellationtokensource" aoid="IsCancellationTokenSource">
-        <h1>IsCancellationTokenSource ( _x_ )</h1>
-        <p>The abstract operation IsCancellationTokenSource checks for the CancellationTokenSource brand on an object.</p>
-        <emu-alg>
-            1. If Type(_x_) is not Object, return *false*.
-            1. If _x_ does not have a [[CancellationState]] internal slot, return *false*.
-            1. Return *true*.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-triggercancellationreactions" aoid="TriggerCancellationReactions">
-        <h1>TriggerCancellationReactions ( _reactions_ )</h1>
-        <p></p>
-        <emu-alg>
-            1.
-        </emu-alg>
-    </emu-clause>
-</emu-clause>
-<emu-clause id="sec-cancellationtokensource-jobs">
-    <h1>CancellationTokenSource Jobs</h1>
-</emu-clause>
-<emu-clause id="sec-cancellationtokensource-constructor">
-    <h1>The CancellationTokenSource Constructor</h1>
-    <p>The CancellationTokenSource constructor is the <dfn>%CancellationTokenSource%</dfn> intrinsic object and the 
-        initial value of the `CancellationTokenSource` property of the global object. When called as a 
-        constructor it creates and initializes a new CancellationTokenSource object. CancellationTokenSource 
-        is not intended to be called as a function and will throw an exception when used in that manner.</p>
-    <emu-clause id="sec-cancellationtokensource">
-        <h1>CancellationTokenSource ( [ _linkedTokens_ ] )</h1>
-        <p>When the `CancellationTokenSource` function is called with optional argument _linkedTokens_, the 
-            following steps are taken:</p>
-        <emu-alg>
-            1. If NewTarget is *undefined*, throw a *TypeError* exception.
-            1. Let _source_ be ? OrdinaryCreateFromConstructor(NewTarget, `"%CancellationTokenSourcePrototype%"`, &laquo; [[CancellationState]], [[Token]], [[Registrations]], [[LinkingRegistrations]] &raquo;).
-            1. Let _token_ be ? ObjectCreate(%CancellationTokenPrototype%, &laquo; [[CancellationTokenSource]] &raquo;).
-            1. Set _token_.[[CancellationTokenSource]] to _source_.
-            1. Set _source_.[[CancellationState]] to be the String `"open"`.
-            1. Set _source_.[[Registrations]] to a new empty List.
-            1. Set _source_.[[LinkingRegistrations]] to be *undefined*.
-            1. Set _source_.[[Token]] to _token_.
-            1. If _linkedTokens_ is not present, let _linkedTokens_ be *undefined*.
-            1. Else,
-                1. Let _iter_ be ? GetIterator(_linkedTokens_).
-            1. If _iter_ is *undefined*, return _source_.
-            1. Set _source_.[[LinkingRegistrations]] to a new empty List.
-            1. Let _callback_ be ? CreateCancelingFunction(_source_).
-            1. Repeat,
-                1. Let _next_ be ? IteratorStep(_iter_).
-                1. If _next_ is *false*, return _source_.
-                1. Let _nextItem_ be ? IteratorValue(_next_).
-                1. If IsCancellationToken(_nextItem_) is *false*, then
-                    1. Let _error_ be Completion { [[Type]]: ~throw~, [[Value]]: a newly created *TypeError* object, [[Target]]: ~empty~ }.
-                    1. Return ? IteratorClose(_iter_, _error_).
-                1. Let _linkedSource_ be _nextItem_.[[CancellationTokenSource]].
-                1. If _linkedSource_.[[CancellationState]] is the String `"cancellationRequested"`, then
-                    1. Let _status_ be ? CancelSource(_source_).
-                    1. If _status_ is an abrupt completion, return ? IteratorClose(_iter_, _status_).
-                    1. Return _source_.
-                1. If _linkedSource.[[CancellationState]] is the String `"open"`, then
-                    1. Let _registration_ be CreateCancellationRegistration(_linkedSource_, _source_).
-                    1. If _registration_ is an abrupt completion, return ? IteratorClose(_iter_, _registration_).
-                    1. Append _registration_ as the last element of _linkedSource_.[[Registrations]].
-                    1. Append _registration_ as the last element of _source_.[[LinkingRegistrations]].
-        </emu-alg>
-    </emu-clause>
-</emu-clause>
-<emu-clause id="sec-properties-of-the-cancellationtokensource-constructor">
-    <h1>Properties of the CancellationTokenSource Constructor</h1>
-    <p>The value of the [[Prototype]] internal slot of the `CancellationTokenSource` constructor is the intrinsic 
-        object %FunctionPrototype%.</p>
-    <p>The CancellationTokenSource constructor has the following properties:</p>
-    <emu-clause id="sec-cancellationtokensource.prototype">
-        <h1>CancellationTokenSource.prototype</h1>
-        <p>The initial value of `CancellationTokenSource.prototype` is the intrinsic object %CancellationTokenSourcePrototype%.</p>
-        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
-    </emu-clause>
-</emu-clause>
-<emu-clause id="sec-properties-of-the-cancellationtokensource-prototype-object">
-    <h1>Properties of the CancellationTokenSource Prototype Object</h1>
-    <p>The CancellationTokenSource prototype object is the intrinsic object <dfn>%CancellationTokenSourcePrototype%</dfn>. 
-        The value of the [[Prototype]] internal slot of the CancellationTokenSource prototype object is the 
-        intrinsic object %ObjectPrototype%. The CancellationTokenSource prototype object is an ordinary object. 
-        It does not have the [[CancellationState]] internal slot or any of the other CancellationTokenSource 
-        instance internal slots.</p>
-    <emu-clause id="sec-cancellationtokensource.prototype.cancel">
-        <h1>CancellationTokenSource.prototype.cancel ()</h1>
-        <p>When the `cancel` method is called, the following steps are taken:</p>
-        <emu-alg>
-            1. Let _source_ be the *this* value.
-            1. If IsCancellationTokenSource(_source_) is *false*, throw a *TypeError* exception.
-            1. Let _promiseCapability_ be ? NewPromiseCapability(%Promise%)
-            1. If _source_.[[CancellationState]] is the String `"open"`, then
-                1. Perform ? CancelSource(_source_, _promiseCapability_).
-            1. Else,
-                1. Perform ? Call(_promiseCapability_.[[Resolve]], *undefined*, &laquo; *undefined* &raquo;).
-            1. Return _promiseCapability_.[[Promise]].
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtokensource.prototype.close">
-        <h1>CancellationTokenSource.prototype.close ()</h1>
-        <p>When the `close` method is called, the following steps are taken:</p>
-        <emu-alg>
-            1. Let _source_ be the *this* value.
-            1. If IsCancellationTokenSource(_source_) is *false*, throw a *TypeError* exception.
-            1. If _source_.[[CancellationState]] is the String `"open"`, then
-                1. Perform ? CloseSource(_source_).
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtokensource.prototype.constructor">
-        <h1>CancellationTokenSource.prototype.constructor</h1>
-        <p>The initial value of `CancellationTokenSource.prototype.constructor` is the intrinsic object %CancellationTokenSource%.</p>
-    </emu-clause>
-    <emu-clause id="sec-get-cancellationtokensource.prototype.token">
-        <h1>get CancellationTokenSource.prototype.token</h1>
-        <p>`CancellationTokenSource.prototype.token` is an accessor property whose set accessor function is *undefined*.
-            Its get accessor function performs the following steps:</p>
-        <emu-alg>
-            1. Let _source_ be the *this* value.
-            1. If IsCancellationTokenSource(_source_) is *false*, throw a *TypeError* exception.
-            1. Return _source_.[[Token]].
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-cancellationtokensource.prototype-@@tostringtag">
-        <h1>CancellationTokenSource.prototype [ @@toStringTag ]</h1>
-        <p>The initial value of the @@toStringTag property is the String value `"CancellationTokenSource"`.</p>
-        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
-    </emu-clause>
-</emu-clause>
-<emu-clause id="sec-properties-of-the-cancellationtokensource-instances">
-    <h1>Properties of CancellationTokenSource Instances</h1>
-    <p>CancellationTokenSource instances are ordinary objects that inherit from the CancellationTokenSource 
-        prototype object (the intrinsic %CancellationTokenSourcePrototype%). CancellationTokenSource instances 
-        are initially created with the internal slots described in <emu-xref href="#table-cancellationtokensource-slots"></emu-xref>.</p>
-    <emu-table id="table-cancellationtokensource-slots" caption="Internal Slots of CancellationTokenSource Instances">
-        <table>
-            <tbody>
-            <tr>
-                <th>Internal Slot</th>
-                <th>Description</th>
-            </tr>
-            <tr>
-                <td>[[CancellationState]]</td>
-                <td>A String value indicating the current state of the source. Possible values include `"open"`, `"cancellationRequested"`, and `"closed"`.</td>
-            </tr>
-            <tr>
-                <td>[[Registrations]]</td>
-                <td>A List of Cancellation Registration objects callbacks registered to this source.</td>
-            </tr>
-            <tr>
-                <td>[[Token]]</td>
-                <td>A CancellationToken instance entangled with the source.</td>
-            </tr>
-            <tr>
-                <td>[[LinkingRegistrations]]</td>
-                <td>A List of Cancellation Registration objects that link this source to other tokens.</td>
-            </tr>
-            </tbody>
-        </table>
-    </emu-table>
-</emu-clause>
-<emu-clause id="sec-cancellation-registration-objects">
-    <h1>Cancellation Registration Objects</h1>
-    <p>A Cancellation Registration is an object that provides the capability to unregister a callback 
-        registered to some CancellationToken object. There is not a named constructor for Cancellation
-        Registration objects. Instead, Cancellation Registration objects are created by calling certain
-        methods of CancellationToken instance objects.</p>
-    <emu-clause id="sec-createcancellationregistration" aoid="CreateCancellationRegistration">
-        <h1>CreateCancellationRegistration ( _source_, _target_ )</h1>
-        <p>When CreateCancellationRegistration is called with arguments _source_ and _target_ the following
-            steps are taken:</p>
-        <emu-alg>
-            1. Assert: IsCancellationTokenSource(_source_) is *true*.
-            1. Assert: IsCancellationTokenSource(_target_) is *true* or IsCallable(_target_) is *true*.
-            1. Let _registration_ be ? ObjectCreate(%CancellationRegistrationPrototype%, &laquo; [[CancellationSource]], [[CancellationTarget]] &raquo;).
-            1. Set _registration_.[[CancellationSource]] to be _source_.
-            1. Set _registration_.[[CancellationTarget]] to be _target_.
-            1. Return _registration_.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-iscancellationregistration" aoid="IsCancellationRegistration">
-        <h1>IsCancellationRegistration ( _x_ )</h1>
-        <p>The abstract operation IsCancellationRegistration checks for the registration brand on an object.</p>
-        <emu-alg>
-            1. If Type(_x_) is not Object, return *false*.
-            1. If _x_ does not have a [[CancellationSource]] internal slot, return *false*.
-            1. Return *true*.
-        </emu-alg>
-    </emu-clause>
-    <emu-clause id="sec-%cancellationregistrationprototype%-object">
-        <h1>The %CancellationRegistrationPrototype% Object</h1>
-        <p>The <dfn>%CancellationRegistrationPrototype%</dfn> object is an orderinary object and its
-            [[Prototype]] internal slot is the %ObjectPrototype% intrinsic object. In addition, 
-            %CancellationRegistrationPrototype% has the following properties:</p>
-        <emu-clause id="sec-%cancellationregistrationprototype%.unregister">
-            <h1>%CancellationRegistrationPrototype%.unregister ()</h1>
-            <p>When the `unregister` method is called, the following steps are taken:</p>
+<emu-clause id="sec-cancellationtokensource-objects">
+    <h1><ins>CancellationTokenSource Objects</ins></h1>
+    <p>
+        A CancellationTokenSource is an object that is used to signal cancellation to a deferred (and
+        possibly asynchronous) computation.
+    </p>
+    <p>
+        Any CancellationTokenSource object is in one of three mutually exclusive states: _open_, 
+        _signaled_, or _closed_:
+        <ul>
+            <li>
+                A source `s` is open if `s.token.canBeCanceled` is *true*.
+            </li>
+            <li>
+                A source `s` is signaled if `s.token.cancellationRequested` is *true*.
+            </li>
+            <li>
+                A source `s` is closed if it is neither open nor signaled.
+            </li>
+        </ul>
+    </p>
+    <emu-clause id="sec-cancellationtokensource-abstract-operations">
+        <h1>CancellationTokenSource Abstract Operations</h1>
+
+        <emu-clause id="sec-cancellationreaction-records">
+            <h1>CancellationReaction Records</h1>
+            <p>
+                The CancellationReaction is a Record value used to store information about how a 
+                Cancellation Registration should react when it's source is canceled.
+            </p>
+            <p>
+                CancellationReaction records have the fields listed in 
+                <emu-xref href="#table-cancellationreaction-record-fields"></emu-xref>.
+            </p>
+            <emu-table id="table-cancellationreaction-record-fields"
+                caption="CancellationReaction Record Fields">
+                <table>
+                <tbody>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Value</th>
+                        <th>Meaning</th>
+                    </tr>
+                    <tr>
+                        <td>[[Capability]]</td>
+                        <td>A PromiseCapability Record or *undefined*</td>
+                        <td>
+                            The capabilities of the promise for which this record provides a reaction
+                            target.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>[[Handler]]</td>
+                        <td>A function object</td>
+                        <td>
+                            The function that should be invoked.
+                        </td>
+                    </tr>
+                </tbody>
+                </table>
+            </emu-table>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellation-linking-functions">
+            <h1>Cancellation Linking Functions</h1>
+            <p>
+                A cancellation linking function is an anonymous built-in function that has a
+                [[LinkedTarget]] internal slot.
+            </p>
+            <p>
+                When a cancellation linking function _F_ is called, the following steps are taken:
+            </p>
             <emu-alg>
-                1. Let _registration_ be the *this* value.
-                1. If IsCancellationRegistration(_registration_) is *false*, throw a *TypeError* exception.
-                1. Let _source_ be _registration_.[[CancellationSource]].
-                1. If _source_ is *undefined*, return.
-                1. Remove _registration_ from _source_.[[Registrations]].
-                1. Set _registration_.[[CancellationSource]] to be *undefined*.
-                1. Set _registration_.[[CancellationTarget]] to be *undefined*.
+                1. Assert: _F_ has a [[LinkedTarget]] internal slot whose value is an Object.
+                1. Let _target_ be _F_.[[LinkedTarget]].
+                1. Return Invoke(_target_, `"cancel"`, &laquo; &raquo;).
+            </emu-alg>
+            <p>
+                The `length` property of a cancellation linking function is 0.
+            </p>
+        </emu-clause>
+
+        <emu-clause id="sec-cancelcancellationtokensource" aoid="CancelCancellationTokenSource">
+            <h1>CancelCancellationTokenSource ( _source_, _promiseCapability_ )</h1>
+            <p>
+                When the CancelCancellationTokenSource abstract operation is called with arguments 
+                _source_ and _promiseCapability_, the following steps are taken:
+            </p>
+            <emu-alg>
+                1. Assert: IsCancellationTokenSource(_source_) is *true*.
+                1. Assert: _source_.[[CancellationState]] is `"open"`.
+                1. Assert: _promiseCapability_ is a PromiseCapability Record or *undefined*.
+                1. Set _source_.[[CancellationState]] to `"cancellationRequested"`.
+                1. Perform ! UnlinkCancellationTokenSource(_source_).
+                1. Let _registrations_ be _source_.[[Registrations]].
+                1. Set _source_.[[Registrations]] to *undefined*.
+                1. Let _reactions_ be a new empty List.
+                1. For each _registration_ in _registrations_, in original insertion order, do
+                    1. If _promiseCapability_ is not *undefined*, then
+                        1. Let _reactionCapability_ be ! NewPromiseCapability(%Promise%).
+                    1. Let _target_ be _registration_.[[CancellationTarget]].
+                    1. Let _reaction_ be CancellationReaction { [[Capability]]: _reactionCapability_, 
+                    [[Handler]]: _target_ }.
+                    1. Append _reaction_ as the last element of _reactions_.
+                    1. If _target_ has a [[LinkedTarget]] internal slot, then
+                        1. Let _linkedTarget_ be _target_.[[LinkedTarget]].
+                        1. Remove _registration_ from _linkedTarget_.[[LinkingRegistrations]].
+                    1. Set _registration_.[[CancellationSource]] to *undefined*.
+                    1. Set _registration_.[[CancellationTarget]] to *undefined*.
+                1. Return TriggerCancellationReactions(_reactions_, _promiseCapability_).
             </emu-alg>
         </emu-clause>
-        <emu-clause id="sec-%cancellationregistrationprototype%-@@tostringtag">
-            <h1>%CancellationRegistrationPrototype% [ @@toStringTag ]</h1>
-            <p>The initial value of the @@toStringTag property is the String value `"CancellationToken Registration"`.</p>
-            <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+
+        <emu-clause id="sec-closecancellationtokensource" aoid="CloseCancellationTokenSource">
+            <h1>CloseCancellationTokenSource ( _source_ )</h1>
+            <p>
+                When the CloseCancellationTokenSource abstract operation is called with argument 
+                _source_, the following steps are taken:
+            </p>
+            <emu-alg>
+                1. Assert: IsCancellationTokenSource(_source_) is *true*.
+                1. Assert: _source_.[[CancellationState]] is `"open"`.
+                1. Set _source_.[[CancellationState]] to `"closed"`.
+                1. Perform ! UnlinkCancellationTokenSource(_source_).
+                1. Let _registrations_ be _source_.[[Registrations]].
+                1. Set _source_.[[Registrations]] to be *undefined*.
+                1. For each _registration_ in _registrations_, in original insertion order, do
+                    1. Let _target_ be _registration_.[[CancellationTarget]].
+                    1. If _target_ has a [[LinkedTarget]] internal slot, then
+                        1. Let _linkedTarget_ be _target_.[[LinkedTarget]].
+                        1. Remove _registration_ from _linkedTarget_.[[LinkingRegistrations]].
+                    1. Set _registration_.[[CancellationSource]] to *undefined*.
+                    1. Set _registration_.[[CancellationTarget]] to *undefined*.
+                1. Return *undefined*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-iscancellationtokensource" aoid="IsCancellationTokenSource">
+            <h1>IsCancellationTokenSource ( _x_ )</h1>
+            <p>
+                The abstract operation IsCancellationTokenSource checks for the CancellationTokenSource 
+                brand on an object.
+            </p>
+            <emu-alg>
+                1. If Type(_x_) is not Object, return *false*.
+                1. If _x_ does not have a [[CancellationState]] internal slot, return *false*.
+                1. Return *true*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-triggercancellationreactions" aoid="TriggerCancellationReactions">
+            <h1>TriggerCancellationReactions ( _reactions_, _promiseCapability_ )</h1>
+            <p>
+                The abstract operation TriggerCancellationReactions takes a collection of
+                Cancellation Reaction records and enqueues a new Job for each record. 
+            </p>
+            <emu-alg>
+                1. If _promiseCapability_ is not *undefined*, then
+                    1. Let _promises_ be a new empty List.
+                1. For each _reaction_ in _reactions_, in original insertion order, do
+                    1. If _promiseCapability_ is not *undefined*, then
+                        1. Let _capability_ be _reaction_.[[Capability]].
+                        1. Let _promise_ be _capability_.[[Promise]].
+                        1. Append _promise_ as the last element of _promises_.
+                    1. Perform ! EnqueueJob(`"CancellationJobs"`, CancellationJob,
+                    &laquo; _reaction_ &raquo;).
+                1. If _promiseCapability_ is *undefined*, then
+                    1. Return *undefined*.
+                1. Let _iterator_ be CreateListIterator(_promises_).
+                1. Let _iteratorRecord_ be Record { [[Iterator]]: _iterator_, [[Done]]: *false* }.
+                1. Let _result_ be PerformPromiseAll(_iteratorRecord_, %Promise%, _promiseCapability_).
+                1. If _result_ is an abrupt completion, then
+                    1. If _iteratorRecord_.[[Done]] is *false*, let _result_ be 
+                    IteratorClose(_iterator_, _result_).
+                    1. IfAbruptRejectPromise(_result_, _promiseCapability_).
+                1. Return _result_.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-unlinkcancellationtokensource" aoid="UnlinkCancellationTokenSource">
+            <h1>UnlinkCancellationTokenSource ( _source_ )</h1>
+            <p>
+                When the UnlinkCancellationTokenSource abstract operation is called with argument 
+                _source_, the following steps are taken:
+            </p>
+            <emu-alg>
+                1. Assert: IsCancellationTokenSource(_source_).
+                1. Let _linkingRegistrations_ be _source_.[[LinkingRegistrations]].
+                1. Set _source_.[[LinkingRegistrations]] to *undefined*.
+                1. If _linkingRegistrations_ is *undefined*, return.
+                1. For each _registration_ in _linkingRegistrations_, in original insertion order, do
+                    1. Let _source_ be _registration_.[[CancellationSource]].
+                    1. If _source_ is not *undefined*, then
+                        1. Remove _registration_ from _source_.[[Registrations]].
+                    1. Set _registration_.[[CancellationSource]] to *undefined*.
+                    1. Set _registration_.[[CancellationTarget]] to *undefined*.
+                1. Return.
+            </emu-alg>
         </emu-clause>
     </emu-clause>
-    <emu-clause id="sec-properties-of-cancellationregistration-instances">
-        <h1>Properties of Cancellation Registration Instances</h1>
-        <p>Cancellation Registration instances are ordinary objects that inherit properties from the 
-            %CancellationRegistrationPrototype% intrinsic object. Cancellation Registration instances
-            are initially created with the internal slots listed in 
-            <emu-xref href="#table-cancellationregistration-slots"></emu-xref>.</p>
-        <emu-table id="table-cancellationregistration-slots" caption="Internal Slots of Cancellation Registration Instances">
+
+    <emu-clause id="sec-cancellationtokensource-jobs">
+        <h1>CancellationTokenSource Jobs</h1>
+        <emu-clause id="sec-cancellationjob" aoid="CancellationJob">
+            <h1>CancellationJob ( _reaction_ )</h1>
+            <p>
+                The job CancellationJob with parameter _reaction_ calls its handler to signal 
+                cancellation.
+            </p>
+            <emu-alg>
+                1. Assert: _reaction_ is a CancellationReaction Record.
+                1. Let _promiseCapability_ be _reaction_.[[Capability]].
+                1. Let _handler_ be _reaction_.[[Handler]].
+                1. Let _handlerResult_ be Call(_handler_, *undefined*, &laquo; &raquo;).
+                1. If _promiseCapability_ is *undefined*, then
+                    1. Return Completion(_handlerResult_).
+                1. If _handlerResult_ is an abrupt completion, then
+                    1. Let _status_ be Call(_promiseCapability_.[[Reject]], *undefined*, &laquo;
+                    _handlerResult_.[[Value]] &raquo;).
+                1. Else,
+                    1. Let _status_ be Call(_promiseCapability_.[[Resolve]], *undefined*, &laquo;
+                    _handlerResult_.[[Value]] &raquo;).
+                1. Return Completion(_status_).
+            </emu-alg>
+        </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-cancellationtokensource-constructor">
+        <h1>The CancellationTokenSource Constructor</h1>
+        <p>
+            The CancellationTokenSource constructor is the <dfn>%CancellationTokenSource%</dfn> 
+            intrinsic object and the initial value of the `CancellationTokenSource` property of the 
+            global object. When called as a constructor it creates and initializes a new 
+            CancellationTokenSource object. CancellationTokenSource is not intended to be called as a 
+            function and will throw an exception when used in that manner.
+        </p>
+
+        <emu-clause id="sec-cancellationtokensource">
+            <h1>CancellationTokenSource ( [ _linkedTokens_ ] )</h1>
+            <p>
+                When the `CancellationTokenSource` function is called with optional argument 
+                _linkedTokens_, the following steps are taken:
+            </p>
+            <emu-alg>
+                1. If NewTarget is *undefined*, throw a *TypeError* exception.
+                1. Let _source_ be ? OrdinaryCreateFromConstructor(NewTarget, 
+                `"%CancellationTokenSourcePrototype%"`, &laquo; [[CancellationState]], [[Token]], 
+                [[Registrations]], [[LinkingRegistrations]] &raquo;).
+                1. Let _token_ be ? ObjectCreate(%CancellationTokenPrototype%, &laquo; 
+                [[CancellationTokenState]], [[CancellationTokenSource]] &raquo;).
+                1. Set _token_.[[CancellationTokenState]] to `"entangled"`.
+                1. Set _token_.[[CancellationTokenSource]] to _source_.
+                1. Set _source_.[[CancellationState]] to `"open"`.
+                1. Set _source_.[[Registrations]] to a new empty List.
+                1. Set _source_.[[Token]] to _token_.
+                1. If _linkedTokens_ is not present, let _linkedTokens_ be *undefined*.
+                1. Else,
+                    1. Let _iter_ be ? GetIterator(_linkedTokens_).
+                1. If _iter_ is *undefined*, then
+                    1. Set _source_.[[LinkingRegistrations]] to *undefined*.
+                    2. Return _source_.
+                1. Set _source_.[[LinkingRegistrations]] to a new empty List.
+                1. Let _handler_ be a new built-in function object as defined in Cancellation Linking
+                Functions (<emu-xref href="#sec-cancellation-linking-functions"></emu-xref>).
+                1. Set _handler_.[[LinkedTarget]] to _source_.
+                1. Repeat,
+                    1. Let _next_ be ? IteratorStep(_iter_).
+                    1. If _next_ is *false*, return _source_.
+                    1. Let _nextItem_ be ? IteratorValue(_next_).
+                    1. If IsCancellationToken(_nextItem_) is *false*, then
+                        1. Let _error_ be Completion { [[Type]]: ~throw~, [[Value]]: a newly created 
+                        *TypeError* object, [[Target]]: ~empty~ }.
+                        1. Return ? IteratorClose(_iter_, _error_).
+                    1. Let _linkedState_ be ? GetCancellationState(_nextItem_).
+                    1. If _linkedState_ is `"cancellationRequested"`, then
+                        1. Let _status_ be CancelCancellationTokenSource(_source_).
+                        1. If _status_ is an abrupt completion, return ? IteratorClose(_iter_, 
+                        _status_).
+                        1. Return _source_.
+                    1. If _linkedState_ is `"open"`, then
+                        1. Let _linkedSource_ be _nextItem_.[[CancellationTokenSource]].
+                        1. Assert: IsCancellationTokenSource(_linkedSource_) is *true*.
+                        1. Let _registration_ be CreateCancellationRegistration(_linkedSource_, 
+                        _handler_).
+                        1. If _registration_ is an abrupt completion, return ? IteratorClose(_iter_, 
+                        _registration_).
+                        1. Append _registration_ as the last element of 
+                        _linkedSource_.[[Registrations]].
+                        1. Append _registration_ as the last element of 
+                        _source_.[[LinkingRegistrations]].
+            </emu-alg>
+        </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-cancellationtokensource-constructor">
+        <h1>Properties of the CancellationTokenSource Constructor</h1>
+        <p>
+            The value of the [[Prototype]] internal slot of the `CancellationTokenSource` constructor is 
+            the intrinsic object %FunctionPrototype%.
+        </p>
+        <p>
+            The CancellationTokenSource constructor has the following properties:
+        </p>
+
+        <emu-clause id="sec-cancellationtokensource.prototype">
+            <h1>CancellationTokenSource.prototype</h1>
+            <p>
+                The initial value of `CancellationTokenSource.prototype` is the intrinsic object 
+                %CancellationTokenSourcePrototype%.
+            </p>
+            <p>
+                This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                [[Configurable]]: *false* }.
+            </p>
+        </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-cancellationtokensource-prototype-object">
+        <h1>Properties of the CancellationTokenSource Prototype Object</h1>
+        <p>
+            The CancellationTokenSource prototype object is the intrinsic object 
+            <dfn>%CancellationTokenSourcePrototype%</dfn>. The value of the [[Prototype]] internal slot 
+            of the CancellationTokenSource prototype object is the intrinsic object %ObjectPrototype%. 
+            The CancellationTokenSource prototype object is an ordinary object. It does not have the 
+            [[CancellationState]] internal slot or any of the other CancellationTokenSource instance 
+            internal slots.
+        </p>
+
+        <emu-clause id="sec-cancellationtokensource.prototype.cancel">
+            <h1>CancellationTokenSource.prototype.cancel ()</h1>
+            <p>
+                When the `cancel` method is called, the following steps are taken:
+            </p>
+            <emu-alg>
+                1. Let _source_ be the *this* value.
+                1. If IsCancellationTokenSource(_source_) is *false*, throw a *TypeError* exception.
+                1. Let _promiseCapability_ be ? NewPromiseCapability(%Promise%)
+                1. If _source_.[[CancellationState]] is `"open"`, then
+                    1. Perform ? CancelCancellationTokenSource(_source_, _promiseCapability_).
+                1. Else,
+                    1. Perform ? Call(_promiseCapability_.[[Resolve]], *undefined*, &laquo; *undefined* 
+                    &raquo;).
+                1. Return _promiseCapability_.[[Promise]].
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtokensource.prototype.close">
+            <h1>CancellationTokenSource.prototype.close ()</h1>
+            <p>When the `close` method is called, the following steps are taken:</p>
+            <emu-alg>
+                1. Let _source_ be the *this* value.
+                1. If IsCancellationTokenSource(_source_) is *false*, throw a *TypeError* exception.
+                1. If _source_.[[CancellationState]] is `"open"`, then
+                    1. Perform ? CloseCancellationTokenSource(_source_).
+                1. Return *undefined*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtokensource.prototype.constructor">
+            <h1>CancellationTokenSource.prototype.constructor</h1>
+            <p>
+                The initial value of `CancellationTokenSource.prototype.constructor` is the intrinsic 
+                object %CancellationTokenSource%.
+            </p>
+        </emu-clause>
+
+        <emu-clause id="sec-get-cancellationtokensource.prototype.token">
+            <h1>get CancellationTokenSource.prototype.token</h1>
+            <p>
+                `CancellationTokenSource.prototype.token` is an accessor property whose set accessor 
+                function is *undefined*. Its get accessor function performs the following steps:
+            </p>
+            <emu-alg>
+                1. Let _source_ be the *this* value.
+                1. If IsCancellationTokenSource(_source_) is *false*, throw a *TypeError* exception.
+                1. Return _source_.[[Token]].
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-cancellationtokensource.prototype-@@tostringtag">
+            <h1>CancellationTokenSource.prototype [ @@toStringTag ]</h1>
+            <p>
+                The initial value of the @@toStringTag property is the String value 
+                `"CancellationTokenSource"`.
+            </p>
+            <p>
+                This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                [[Configurable]]: *true* }.
+            </p>
+        </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-cancellationtokensource-instances">
+        <h1>Properties of CancellationTokenSource Instances</h1>
+        <p>
+            CancellationTokenSource instances are ordinary objects that inherit from the 
+            CancellationTokenSource prototype object (the intrinsic %CancellationTokenSourcePrototype%). 
+            CancellationTokenSource instances  are initially created with the internal slots described 
+            in <emu-xref href="#table-cancellationtokensource-slots"></emu-xref>.
+        </p>
+        <emu-table id="table-cancellationtokensource-slots" 
+            caption="Internal Slots of CancellationTokenSource Instances">
             <table>
                 <tbody>
                 <tr>
@@ -234,15 +407,145 @@
                     <th>Description</th>
                 </tr>
                 <tr>
-                    <td>[[CancellationSource]]</td>
-                    <td>The CancellationTokenSource to which this registration is associated.</td>
+                    <td>[[CancellationState]]</td>
+                    <td>
+                        A String value indicating the current state of the source. Possible values 
+                        include `"open"`, `"cancellationRequested"`, and `"closed"`.
+                    </td>
                 </tr>
                 <tr>
-                    <td>[[CancellationTarget]]</td>
-                    <td>A Function object to execute or a linked CancellationTokenSource to cancel when cancellation is requested.</td>
+                    <td>[[Registrations]]</td>
+                    <td>
+                        A List of Cancellation Registration objects registered to this source.
+                    </td>
+                </tr>
+                <tr>
+                    <td>[[Token]]</td>
+                    <td>
+                        A CancellationToken instance entangled with the source.
+                    </td>
+                </tr>
+                <tr>
+                    <td>[[LinkingRegistrations]]</td>
+                    <td>
+                        A List of Cancellation Registration objects that link this source to other 
+                        tokens.
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </emu-table>
+    </emu-clause>
+
+    <emu-clause id="sec-cancellation-registration-objects">
+        <h1>Cancellation Registration Objects</h1>
+        <p>
+            A Cancellation Registration is an object that provides the capability to unregister a 
+            callback registered to some CancellationToken object. There is not a named constructor for 
+            Cancellation Registration objects. Instead, Cancellation Registration objects are created by 
+            calling certain methods of CancellationToken instance objects.
+        </p>
+
+        <emu-clause id="sec-createcancellationregistration" aoid="CreateCancellationRegistration">
+            <h1>CreateCancellationRegistration ( _source_, _target_ )</h1>
+            <p>
+                When CreateCancellationRegistration is called with arguments _source_ and _target_ the 
+                following steps are taken:
+            </p>
+            <emu-alg>
+                1. Assert: IsCancellationTokenSource(_source_) is *true*.
+                1. Assert: IsCallable(_target_) is *true*.
+                1. Let _registration_ be ? ObjectCreate(%CancellationRegistrationPrototype%, &laquo; 
+                [[CancellationSource]], [[CancellationTarget]] &raquo;).
+                1. Set _registration_.[[CancellationSource]] to be _source_.
+                1. Set _registration_.[[CancellationTarget]] to be _target_.
+                1. Return _registration_.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-iscancellationregistration" aoid="IsCancellationRegistration">
+            <h1>IsCancellationRegistration ( _x_ )</h1>
+            <p>
+                The abstract operation IsCancellationRegistration checks for the registration brand on 
+                an object.
+            </p>
+            <emu-alg>
+                1. If Type(_x_) is not Object, return *false*.
+                1. If _x_ does not have a [[CancellationSource]] internal slot, return *false*.
+                1. Return *true*.
+            </emu-alg>
+        </emu-clause>
+
+        <emu-clause id="sec-%cancellationregistrationprototype%-object">
+            <h1>The %CancellationRegistrationPrototype% Object</h1>
+            <p>
+                The <dfn>%CancellationRegistrationPrototype%</dfn> object is an orderinary object and 
+                its [[Prototype]] internal slot is the %ObjectPrototype% intrinsic object. In addition, 
+                %CancellationRegistrationPrototype% has the following properties:
+            </p>
+
+            <emu-clause id="sec-%cancellationregistrationprototype%.unregister">
+                <h1>%CancellationRegistrationPrototype%.unregister ()</h1>
+                <p>
+                    When the `unregister` method is called, the following steps are taken:
+                </p>
+                <emu-alg>
+                    1. Let _registration_ be the *this* value.
+                    1. If IsCancellationRegistration(_registration_) is *false*, throw a *TypeError* 
+                    exception.
+                    1. Let _source_ be _registration_.[[CancellationSource]].
+                    1. If _source_ is *undefined*, return.
+                    1. Remove _registration_ from _source_.[[Registrations]].
+                    1. Set _registration_.[[CancellationSource]] to be *undefined*.
+                    1. Set _registration_.[[CancellationTarget]] to be *undefined*.
+                </emu-alg>
+            </emu-clause>
+
+            <emu-clause id="sec-%cancellationregistrationprototype%-@@tostringtag">
+                <h1>%CancellationRegistrationPrototype% [ @@toStringTag ]</h1>
+                <p>
+                    The initial value of the @@toStringTag property is the String value 
+                    `"CancellationToken Registration"`.
+                </p>
+                <p>
+                    This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, 
+                    [[Configurable]]: *true* }.
+                </p>
+            </emu-clause>
+        </emu-clause>
+
+        <emu-clause id="sec-properties-of-cancellationregistration-instances">
+            <h1>Properties of Cancellation Registration Instances</h1>
+            <p>
+                Cancellation Registration instances are ordinary objects that inherit properties from 
+                the %CancellationRegistrationPrototype% intrinsic object. Cancellation Registration 
+                instances are initially created with the internal slots listed in 
+                <emu-xref href="#table-cancellationregistration-slots"></emu-xref>.
+            </p>
+            <emu-table id="table-cancellationregistration-slots" 
+                caption="Internal Slots of Cancellation Registration Instances">
+                <table>
+                    <tbody>
+                    <tr>
+                        <th>Internal Slot</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>[[CancellationSource]]</td>
+                        <td>
+                            The CancellationTokenSource to which this registration is associated.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>[[CancellationTarget]]</td>
+                        <td>
+                            A Function object to execute or a linked CancellationTokenSource to cancel 
+                            when cancellation is requested.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </emu-table>
+        </emu-clause>
     </emu-clause>
 </emu-clause>
