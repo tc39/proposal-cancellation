@@ -330,7 +330,7 @@ function fetchAsync(url, cancellationToken = CancellationToken.none) {
       xhr.abort();
 
       // reject the promise
-      reject(new CancelError(cancellationToken));
+      reject(new CancelError());
     }
 
     // register the callback to execute when cancellation is requested
