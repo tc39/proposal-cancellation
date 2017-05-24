@@ -27,7 +27,7 @@ through the adoption of a set of native platform objects.
 class CancellationTokenSource {
   constructor(linkedTokens?: Iterable<CancellationToken>);
   readonly token: CancellationToken;
-  cancel(): Promise<void>;
+  cancel(): void;
   close(): void;
 }
 
@@ -150,10 +150,9 @@ asynchronously, you may register a callback using the `token.register()` method 
 that can be used to unregister the callback once you no longer need to observe the signal.
 
 ## Finalizing a Cancellation Request
-When you invoke `source.cancel()`, it enqueues a [Job][JobQueue] for each registered callback to
-execute in a later turn and returns a [Promise][Promise]. Once all registered callbacks have run to
-completion, the Promise is resolved. If any registered callback results in an exception, the Promise is
-rejected.
+When you invoke `source.cancel()`, it evaluates each registered callback with an empty stack. Once all 
+registered callbacks have run to completion, the method will return. If any registered callback results in 
+an exception, the exception is raised to the host's unhandled exception mechanism.
 
 ## Complex Cancellation Graphs
 You can model complex cancellation graphs by further entangling a `CancellationTokenSource` with one or more
@@ -219,7 +218,7 @@ Signals a [CancellationToken](#class-cancellationtoken) that it should be cancel
 class CancellationTokenSource {
   constructor(linkedTokens?: Iterable<CancellationToken>);
   readonly token: CancellationToken;
-  cancel(): Promise<void>;
+  cancel(): void;
   close(): void;
 }
 ```
@@ -242,12 +241,9 @@ Gets the CancellationToken linked to this source.
 * Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
 
 ### source.cancel()
-Cancels the source, returning a Promise that is settled when cancellation has completed.
-Any registered callbacks are enqueued in the [Job Queue](JobQueue). If any callback raises an exception,
-the first such exception can be observed by awaiting the return value of this method.
-* Returns: [&lt;Promise&gt;](https://tc39.github.io/ecma262/#sec-promise-constructor)
-  A promise that resolves after all registered callbacks have been executed.
-  If any callback raised an exception, the promise will be rejected with the first exception thrown.
+Cancels the source, evaluating any registered callbacks. If any callback raises an exception,
+the exception is propagated to a host specific unhandled exception mechansim (e.g. `window.onerror` 
+or `process.on("uncaughtException")`).
 
 ### source.close()
 Closes the source, preventing the possibility of future cancellation. If the *source* is linked to any
@@ -482,6 +478,5 @@ A reference implementation can be found in the `prex` library:
 [Boolean]: https://tc39.github.io/ecma262/#sec-boolean-constructor
 [Function]: https://tc39.github.io/ecma262/#sec-function-constructor
 [Error]: https://tc39.github.io/ecma262/#sec-error-constructor
-[Promise]: https://tc39.github.io/ecma262/#sec-promise-constructor
 [Iterable]: https://tc39.github.io/ecma262/#sec-symbol.iterator
 [JobQueue]: https://tc39.github.io/ecma262/#sec-jobs-and-job-queues
