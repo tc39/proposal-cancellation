@@ -122,6 +122,27 @@
                 1. Return.
             </emu-alg>
         </emu-clause>
+
+        <emu-clause id="sec-getcancellationtokensourcestate" aoid="GetCancellationTokenSourceState">
+            <h1>GetCancellationTokenSourceState ( _source_ )</h1>
+            <p>
+                When GetCancellationTokenSourceState is called with argument _source_, the following steps are
+                taken:
+            </p>
+            <emu-alg>
+                1. Assert: IsCancellationTokenSource(_source_) is *true*.
+                1. Let _state_ be _source_.[[CancellationState]].
+                1. Let _linkingRegistrations_ be _source_.[[LinkingRegistrations]]
+                1. If _state_ is `"open"` and _linkingRegistrations_ is not *undefined*, then
+                    1. For each _registration_ in _linkingRegistrations_, in original insertion order, do
+                        1. Let _source_ be _registration_.[[CancellationSource]].
+                        1. If _source_ is not *undefined*, then
+                            1. Let _sourceState_ be GetCancellationTokenSourceState(_source_).
+                            1. If _sourceState_ is `"cancellationRequested"`, then
+                                1. Return `"cancellationRequested"`.
+                1. Return _state_.
+            </emu-alg>
+        </emu-clause>
     </emu-clause>
 
     <emu-clause id="sec-cancellationtokensource-constructor">
@@ -170,7 +191,7 @@
                         1. Let _error_ be Completion { [[Type]]: ~throw~, [[Value]]: a newly created
                         *TypeError* object, [[Target]]: ~empty~ }.
                         1. Return ? IteratorClose(_iter_, _error_).
-                    1. Let _linkedState_ be ? GetCancellationState(_nextItem_).
+                    1. Let _linkedState_ be ? GetCancellationTokenState(_nextItem_).
                     1. If _linkedState_ is `"cancellationRequested"`, then
                         1. Let _status_ be CancelCancellationTokenSource(_source_).
                         1. If _status_ is an abrupt completion, return ? IteratorClose(_iter_,

@@ -20,10 +20,10 @@
             </emu-alg>
         </emu-clause>
 
-        <emu-clause id="sec-getcancellationstate" aoid="GetCancellationState">
-            <h1>GetCancellationState ( _token_ )</h1>
+        <emu-clause id="sec-getcancellationtokenstate" aoid="GetCancellationTokenState">
+            <h1>GetCancellationTokenState ( _token_ )</h1>
             <p>
-                When GetCancellationState is called with argument _token_, the following steps are
+                When GetCancellationTokenState is called with argument _token_, the following steps are
                 taken:
             </p>
             <emu-alg>
@@ -31,7 +31,7 @@
                 1. Let _state_ be _token_.[[CancellationTokenState]].
                 1. If _state_ is `"entangled"`, then
                     1. Let _source_ be _token_.[[CancellationTokenSource]].
-                    1. Let _state_ be _source_.[[CancellationState]].
+                    1. Let _state_ be GetCancellationTokenSourceState(_source_).
                 1. Return _state_.
             </emu-alg>
         </emu-clause>
@@ -139,7 +139,7 @@
             <emu-alg>
                 1. Let _token_ be the *this* value.
                 1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-                1. If GetCancellationState(_token_) is `"open"`, return *true*.
+                1. If GetCancellationTokenState(_token_) is `"open"`, return *true*.
                 1. Return *false*.
             </emu-alg>
         </emu-clause>
@@ -154,7 +154,7 @@
             <emu-alg>
                 1. Let _token_ be the *this* value.
                 1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-                1. If GetCancellationState(_token_) is `"cancellationRequested"`, return *true*.
+                1. If GetCancellationTokenState(_token_) is `"cancellationRequested"`, return *true*.
                 1. Return *false*.
             </emu-alg>
         </emu-clause>
@@ -179,7 +179,7 @@
                 1. If IsCallable(_onCanceled_) is *false*, throw a *TypeError* exception.
                 1. Let _source_ be _token_.[[CancellationTokenSource]].
                 1. Let _registration_ be ? CreateCancellationRegistration(_source_, _onCanceled_).
-                1. Let _state_ be GetCancellationState(_token_).
+                1. Let _state_ be GetCancellationTokenState(_token_).
                 1. If _state_ is `"closed"`, return _registration_.
                 1. If _state_ is `"cancellationRequested"`, then
                     1. Let _result_ be Call(_onCanceled_, *undefined*, &laquo; &raquo;).
@@ -199,7 +199,7 @@
             <emu-alg>
                 1. Let _token_ be the *this* value.
                 1. If IsCancellationToken(_token_) is *false*, throw a *TypeError* exception.
-                1. If GetCancellationState(_token_) is `"cancellationRequested"`, then
+                1. If GetCancellationTokenState(_token_) is `"cancellationRequested"`, then
                     1. Let _error_ be a new *CancelError* exception.
                     1. Perform ? CreateDataProperty(_error_, `"token"`, _token_).
                     1. Throw _error_.
