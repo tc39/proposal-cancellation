@@ -478,6 +478,10 @@ class Grid {
 }
 ```
 
+# Extensibility
+
+See [EXTENSIBILITY.md](EXTENSIBILITY.md).
+
 # Stretch Goals
 The following are possible stretch goals to the above proposal that may be "nice to have" but should not
 be considered blockers for possible adoption:
