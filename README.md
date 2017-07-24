@@ -3,6 +3,17 @@
 This proposal defines an approach to user-controlled cancellation of asynchronous operations
 through the adoption of a set of native platform objects.
 
+## Status
+
+**Stage:** 0  
+**Champion:** Ron Buckton (@rbuckton), Brian Terlson (@bterlson)
+
+_For more information see the [TC39 proposal process](https://tc39.github.io/process-document/)._
+
+## Authors
+
+* Ron Buckton (@rbuckton)
+
 # Motivations
 
 * A clear and consistent approach to cancelling asynchronous operations:
@@ -34,6 +45,7 @@ class CancellationTokenSource {
 class CancellationToken {
   static readonly none: CancellationToken;
   static readonly canceled: CancellationToken;
+  constructor(source: CancellationTokenSource);
   readonly cancellationRequested: boolean;
   readonly canBeCanceled: boolean;
   throwIfCancellationRequested(): void;
@@ -257,6 +269,7 @@ Propagates notifications that operations should be canceled.
 class CancellationToken {
     static readonly none: CancellationToken;
     static readonly canceled: CancellationToken;
+    constructor(source: CancellationTokenSource);
     readonly cancellationRequested: boolean;
     readonly canBeCanceled: boolean;
     throwIfCancellationRequested(): void;
@@ -270,6 +283,11 @@ Gets a token which will never be canceled.
 
 ### CancellationToken.canceled
 Gets a token that is already canceled.
+* Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
+
+### new CancellationToken(source)
+Creates a new CancellationToken linked to an existing CancellationTokenSource.
+* `source` [&lt;CancellationTokenSource*gt;][#class-cancellationtokensource]
 * Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
 
 ### token.cancellationRequested
@@ -473,6 +491,37 @@ A reference implementation can be found in the `prex` library:
 * npm: https://www.npmjs.com/package/prex or `npm install prex`
 * source: https://github.com/rbuckton/prex
 
+# TODO
+
+The following is a high-level list of tasks to progress through each stage of the [TC39 proposal process](https://tc39.github.io/process-document/):
+
+### Stage 1 Entrance Criteria
+
+* [x] Identified a "[champion][Champion]" who will advance the addition.  
+* [x] [Prose][Prose] outlining the problem or need and the general shape of a solution.  
+* [x] Illustrative [examples][Examples] of usage.  
+* [x] High-level [API][API].  
+
+### Stage 2 Entrance Criteria
+
+* [ ] [Initial specification text][Specification].  
+* [ ] _Optional_. [Transpiler support][Transpiler] (for syntax) or [Polyfill][Polyfill] (for API).  
+
+### Stage 3 Entrance Criteria
+
+* [ ] [Complete specification text][Specification].  
+* [ ] Designated reviewers have [signed off][Stage3ReviewerSignOff] on the current spec text.  
+* [ ] The ECMAScript editor has [signed off][Stage3EditorSignOff] on the current spec text.  
+
+### Stage 4 Entrance Criteria
+
+* [ ] [Test262](https://github.com/tc39/test262) acceptance tests have been written for mainline usage scenarios and [merged][Test262PullRequest].  
+* [ ] Two compatible implementations which pass the acceptance tests: [\[1\]][Implementation1], [\[2\]][Implementation2].  
+* [ ] A [pull request][Ecma262PullRequest] has been sent to tc39/ecma262 with the integrated spec text.  
+* [ ] The ECMAScript editor has signed off on the [pull request][Ecma262PullRequest].  
+
+<!-- The following are shared links used throughout the README: -->
+
 [Object]: https://tc39.github.io/ecma262/#sec-object-constructor
 [String]: https://tc39.github.io/ecma262/#sec-string-constructor
 [Boolean]: https://tc39.github.io/ecma262/#sec-boolean-constructor
@@ -480,3 +529,16 @@ A reference implementation can be found in the `prex` library:
 [Error]: https://tc39.github.io/ecma262/#sec-error-constructor
 [Iterable]: https://tc39.github.io/ecma262/#sec-symbol.iterator
 [JobQueue]: https://tc39.github.io/ecma262/#sec-jobs-and-job-queues
+[Champion]: #status
+[Prose]: #proposal
+[Examples]: #examples
+[API]: #cancellation-objects
+[Specification]: https://tc39.github.io/proposal-cancellation
+[Transpiler]: #todo
+[Polyfill]: https://github.com/rbuckton/prex
+[Stage3ReviewerSignOff]: #todo
+[Stage3EditorSignOff]: #todo
+[Test262PullRequest]: #todo
+[Implementation1]: #todo
+[Implementation2]: #todo
+[Ecma262PullRequest]: #todo
