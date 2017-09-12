@@ -10,7 +10,7 @@ through the adoption of a set of native platform objects.
 
 _For more information see the [TC39 proposal process](https://tc39.github.io/process-document/)._
 
-> NOTE: TC39 has decided to accept that there is a need for a cancellation mechanism in the core library.
+> NOTE: TC39 has decided to investigate a cancellation mechanism in the core library.
 > As such, Cancellation has moved to Stage 1, but **not** in the from of the previous Stage 0 proposal.
 > Instead, TC39 believes this is a space that requires further investigation and discussion.
 > The previous Stage 0 proposal can be found [here](stage0/README.md).
