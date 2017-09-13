@@ -1,14 +1,19 @@
-# Cancellation API
+# ECMAScript Cancellation
 
-This proposal defines an approach to user-controlled cancellation of asynchronous operations
+This proposal seeks to define an approach to user-controlled cancellation of asynchronous operations
 through the adoption of a set of native platform objects.
 
 ## Status
 
-**Stage:** 0  
-**Champion:** Ron Buckton (@rbuckton), Brian Terlson (@bterlson)
+**Stage:** 1  
+**Champion:** Ron Buckton (@rbuckton), Brian Terlson (@bterlson), Domenic Denicola (@domenic), Yehuda Katz (@wycats)
 
 _For more information see the [TC39 proposal process](https://tc39.github.io/process-document/)._
+
+> NOTE: TC39 has decided to investigate a cancellation mechanism in the core library.
+> As such, Cancellation has moved to Stage 1, but **not** in the from of the previous Stage 0 proposal.
+> Instead, TC39 believes this is a space that requires further investigation and discussion.
+> The previous Stage 0 proposal can be found [here](stage0/README.md).
 
 ## Authors
 
@@ -21,45 +26,15 @@ _For more information see the [TC39 proposal process](https://tc39.github.io/pro
   * [Fetching](https://fetch.spec.whatwg.org/#fetch-api) remote resources (HTTP, I/O, etc.)
   * Interacting with background tasks (Web Workers, forked processes, etc.)
   * Long-running operations ([animations](https://w3c.github.io/web-animations/), etc.)
-* A general-purpose coordination primitive with many use cases:
+* A general-purpose coordination mechanism with many use cases:
   * Synchronous observation (e.g. in a game loop)
   * Asynchronous observation (e.g. aborting an XMLHttpRequest, stopping an animation)
   * Easy to use in async functions.
-  * Scale from simple single source -> token relationships to [complex cancellation graphs](#complex-cancellation-graphs).
-* A single shared API that is reusable in multiple host environments (Browser, NodeJS, IoT/embedded, etc.).
+* A common API that is reusable in multiple host environments (Browser, NodeJS, IoT/embedded, etc.).
 
 # Prior Art
 
 * [Cancellation in Managed Threads](https://msdn.microsoft.com/en-us/library/dd997364(v=vs.110)) in the .NET Framework
-
-# Proposal
-
-```ts
-class CancellationTokenSource {
-  constructor(linkedTokens?: Iterable<CancellationToken>);
-  readonly token: CancellationToken;
-  cancel(): void;
-  close(): void;
-}
-
-class CancellationToken {
-  static readonly none: CancellationToken;
-  static readonly canceled: CancellationToken;
-  constructor(source: CancellationTokenSource);
-  readonly cancellationRequested: boolean;
-  readonly canBeCanceled: boolean;
-  throwIfCancellationRequested(): void;
-  register(callback: () => void): { unregister(): void; };
-}
-```
-
-Cancellation consists of two main components:
-
-* `CancellationTokenSource` - Created by the caller of an asynchronous operation, a *CancellationTokenSource*
-is responsible for signaling cancellation.
-* `CancellationToken` - Each *CancellationTokenSource* is entangled with a single *CancellationToken*
-which is supplied to an asynchronous operation by the caller. A *CancellationToken* can only be
-used to observe a cancellation signal.
 
 ## Architecture
 The following are some architectural observations provided by **Dean Tribble** on the [es-discuss mailing list](https://mail.mozilla.org/pipermail/es-discuss/2015-March/041887.html):
@@ -154,353 +129,6 @@ The following are some architectural observations provided by **Dean Tribble** o
 > current page. That's the reason why the "register" method returns a
 > capability to unregister the action.
 
-## Observing Cancellation Requests
-A request for cancellation may be observed either synchronously or asynchronously. To observe a
-cancellation request synchronously you may either check the `token.cancellationRequested` property, or
-invoke the `token.throwIfCancellationRequested()` method. To observe a cancellation request
-asynchronously, you may register a callback using the `token.register()` method which returns an object
-that can be used to unregister the callback once you no longer need to observe the signal.
-
-## Finalizing a Cancellation Request
-When you invoke `source.cancel()`, it evaluates each registered callback with an empty stack. Once all 
-registered callbacks have run to completion, the method will return. If any registered callback results in 
-an exception, the exception is raised to the host's unhandled exception mechanism.
-
-## Complex Cancellation Graphs
-You can model complex cancellation graphs by further entangling a `CancellationTokenSource` with one or more
-`CancellationToken` objects.
-
-For example, you can have a multiple `CancellationTokenSource` objects for various asynchronous operations
-(such as fetching data, running animations, etc.) that are linked back to a root `CancellationTokenSource`
-that can be used to cancel all operations (such as when the user navigates to another page):
-
-```ts
-const root = new CancellationTokenSource();
-const animationSources = new WeakMap();
-let completionsSource;
-
-function onNavigate() {
-  root.cancel();
-}
-
-function onKeyPress(e) {
-  // cancel any existing completion
-  if (completionsSource) completionsSource.cancel();
-
-  // create and track a cancellation source linked to the root
-  completionsSource = new CancellationTokenSource([root.token]);
-
-  // fetch auto-complete entries
-  fetchCompletions(e.target.value, completionsSource.token);
-}
-
-function fadeIn(element) {
-  // cancel any existing animation
-  const existingSource = animationSources.get(element);
-  if (existingSource) existingSource.cancel();
-
-  // create and track a cancellation source linked to the root
-  const fadeInSource = new CancellationTokenSource([root.token]);
-  animationSources.set(element, fadeInSource);
-
-  // hand off element and token to animation
-  beginFadeIn(element, fadeInSource.token);
-}
-```
-
-Another usage is to create a `CancellationTokenSource` linked to other asynchronous operations:
-
-```ts
-async function startMonitoring(timeoutSource, disconnectSource) {
-  const monitorSource = new CancellationTokenSource([timeoutSource, disconnectSource]);
-  while (!monitorSource.cancellationRequested) {
-    await pingUser();
-  }
-}
-```
-
-# Cancellation Objects
-
-## Class: CancellationTokenSource
-Signals a [CancellationToken](#class-cancellationtoken) that it should be canceled.
-
-#### Syntax
-
-```ts
-class CancellationTokenSource {
-  constructor(linkedTokens?: Iterable<CancellationToken>);
-  readonly token: CancellationToken;
-  cancel(): void;
-  close(): void;
-}
-```
-
-### new CancellationTokenSource(linkedTokens?)
-Initializes a new instance of a CancellationTokenSource.
-* `linkedTokens` [&lt;Iterable&gt;][Iterable] An optional iterable of tokens to which to link this source.
-
-By supplying a set of linked tokens, you can model a complex cancellation graph that allows you to signal
-cancellation to various subsets of a more complex asynchronous operation. For example, you can create a
-cancellation hierarchy where a root `CancellationTokenSource` can be used to signal cancellation for all
-asynchronous operations (such as when signing out of an application), with linked `CancellationTokenSource`
-children used to signal cancellation for subsets such as fetching pages of asynchronous data or stopping
-long-running background operations in a Web Worker. You can also create a `CancellationTokenSource` that
-is attached to multiple existing tokens, allowing you to aggregate multiple cancellation signals into
-a single token.
-
-### source.token
-Gets the CancellationToken linked to this source.
-* Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
-
-### source.cancel()
-Cancels the source, evaluating any registered callbacks. If any callback raises an exception,
-the exception is propagated to a host specific unhandled exception mechansim (e.g. `window.onerror` 
-or `process.on("uncaughtException")`).
-
-### source.close()
-Closes the source, preventing the possibility of future cancellation. If the *source* is linked to any
-existing tokens, the links are unregistered.
-
-## Class: CancellationToken
-Propagates notifications that operations should be canceled.
-
-#### Syntax
-```ts
-class CancellationToken {
-    static readonly none: CancellationToken;
-    static readonly canceled: CancellationToken;
-    constructor(source: CancellationTokenSource);
-    readonly cancellationRequested: boolean;
-    readonly canBeCanceled: boolean;
-    throwIfCancellationRequested(): void;
-    register(callback: () => void): { unregister(): void; };
-}
-```
-
-### CancellationToken.none
-Gets a token which will never be canceled.
-* Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
-
-### CancellationToken.canceled
-Gets a token that is already canceled.
-* Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
-
-### new CancellationToken(source)
-Creates a new CancellationToken linked to an existing CancellationTokenSource.
-* `source` [&lt;CancellationTokenSource*gt;][#class-cancellationtokensource]
-* Returns: [&lt;CancellationToken&gt;](#class-cancellationtoken)
-
-### token.cancellationRequested
-Gets a value indicating whether cancellation has been requested.
-* Returns: [&lt;Boolean&gt;][Boolean]
-
-### token.canBeCanceled
-Gets a value indicating whether the underlying source can be canceled.
-* Returns: [&lt;Boolean&gt;][Boolean]
-
-### token.throwIfCancellationRequested()
-Throws a [CancelError](#class-cancelerror) if cancellation has been requested.
-
-### token.register(callback)
-Registers a callback to execute when cancellation is requested.
-* `callback` [&lt;Function&gt;][Boolean] The callback to register.
-* Returns: [&lt;Object&gt;][Object] An object that can be used to unregister the callback.
-
-## Class: CancelError
-An error thrown when an operation is canceled.
-
-#### Inheritance hierarchy
-* [Error][Error]
-  * CancelError
-
-#### Syntax
-```ts
-class CancelError extends Error {
-    constructor(message?: string);
-}
-```
-
-### new CancelError(message?)
-Initializes a new instance of the CancelError class.
-* `message` [&lt;String&gt;][String] An optional message for the error.
-
-# Examples
-The following examples demonstrate some of the key concepts of the `CancellationTokenSource` and `CancellationToken`:
-
-## Promise Producer, Cancellation Consumer
-The `fetchAsync` method below produces a Promise, and can consume a cancellation signal:
-
-```js
-function fetchAsync(url, cancellationToken = CancellationToken.none) {
-  return new Promise((resolve, reject) => {
-    // throw (reject) if cancellation has already been requested.
-    cancellationToken.throwIfCancellationRequested();
-
-    const xhr = new XMLHttpRequest();
-
-    // save a callback to abort the xhr when cancellation is requested
-    const oncancel = () => {
-      // abort the request
-      xhr.abort();
-
-      // reject the promise
-      reject(new CancelError());
-    }
-
-    // register the callback to execute when cancellation is requested
-    const registration = cancellationToken.register(oncancel);
-
-    // wait for the remote resource
-    xhr.onload = event => {
-      // async operation completed, stop waiting for cancellation
-      registration.unregister();
-
-      // resolve the promise
-      resolve(event);
-    }
-
-    xhr.onerror = event => {
-      // async operation failed, stop waiting for cancellation
-      registration.unregister();
-
-      // reject the promise
-      reject(event);
-    }
-
-    // begin the async operation
-    xhr.open('GET', url, /*async*/ true);
-    xhr.send(null);
-  });
-}
-```
-
-## Cancellation Producer, Promise Consumer
-The `fetchConsumer` method below can produce a cancellation signal, and consumes a Promise.
-
-```js
-function fetchConsumer(url) {
-  const source = new CancellationTokenSource();
-  setTimeout(() => source.cancel(), 1000); // cancel after 1sec.
-  return fetchAsync(url, source.token);
-}
-```
-
-## Promise Consumer, Cancellation Consumer
-The `fetchMiddle` function below receives a *CancellationToken* from its caller, which it can choose to
-listen to and pass along, but cannot cancel the CancellationTokenSource of its upstream caller. In addition,
-this function will receive the Promise produced by `fetchAsync` and can listen to the result, but cannot
-resolve or reject the Promise of the downstream Promise producer.
-
-```js
-function fetchMiddle(url, cancellationToken = CancellationToken.default) {
-  document.querySelector("#loading").style.display = 'block';
-
-  // Secondary consumer *can* listen for cancellation...
-  const ondone = () => document.querySelector("#loading").style.display = 'none';
-  const registration = cancellationToken.register(ondone);
-
-  return fetchAsync(url, cancellationToken)
-    .then(value => {
-      registration.unregister();
-      ondone();
-      return value;
-    }, reason => {
-      registration.unregister();
-      ondone();
-      return Promise.reject(reason);
-    })
-}
-```
-
-## Upstream Promise Consumer
-Another benefit to this mechanism for cancellation, is that upstream consumers of a Promise from a library can only affect the canceled state of a downstream Promise producer if the API of the downstream library accepts a CancellationToken argument. Upstream consumers cannot directly affect the state of the downstream Promise. For example, consider a grid that performs UI virtualization:
-
-```js
-class Grid {
-  constructor(dataUrl) {
-    // cancels all network traffic when the Grid is destroyed
-    this._cleanupSource = new CancellationTokenSource();
-    this._rows = new Array();
-    this._dataUrl = dataUrl;
-  }
-
-  // ...
-
-    // somewhat naive, we always fetch the rows in the background so that we can cache them in memory,
-    // even when a new fetch is requested.
-  _fetchRows(offset, count) {
-    if (this._hasCachedRows(offset, count)) {
-      return Promise.resolve();
-    }
-
-    return fetchAsync(dataUrl + "?offset=" + offset + "&count=" + count, this._cleanupSource.token)
-      .then(event => {
-        const result = JSON.parse(event.source.responseText);
-        for (var i = 0; i < result.length; i++) {
-          this._rows[offset + i] = result[i];
-        }
-      });
-  }
-
-  // handles the "click" event of a next page button. prevPage would be similar.
-  // an external caller can request a new page, but cannot cancel the underlying network operation.
-  nextPage() {
-    // cancel any previous page change
-    if (this._pageSource) {
-      this._pageSource.cancel();
-    }
-
-    // set the current page change, linking it to the cleanup source.
-    const pageSource = new CancellationTokenSource([this._cleanupSource.token]);
-    this._pageSource = pageSource;
-
-    const page = this.page + 1;
-    const count = this.pageSize;
-    const offset = page * count;
-
-    // fetch the rows (either from cache or from the remote store)
-    return this._fetchRows(offset, count).then(() => {
-      // if a new page was requested, stop processing.
-      if (pageSource.token.cancellationRequested) {
-        return;
-      }
-
-      pageSource.close();
-      this._displayPage(page);
-    });
-  }
-
-  // destroys the Grid, cancel any pending network activity
-  destroy() {
-    // this both cancels any pending network activity as well as cancels any linked page changes.
-    this._cleanupSource.cancel();
-  }
-}
-```
-
-# Extensibility
-
-See [EXTENSIBILITY.md](EXTENSIBILITY.md).
-
-# Stretch Goals
-
-The following are possible stretch goals to the above proposal that may be "nice to have" but should not
-be considered blockers for possible adoption:
-
-* Add a `reason` argument to the callback supplied to `CancellationToken#register` that can be used to observe the cancellation signal to better interoperate with the `reject` callback for a `Promise`.
-* Add an optional `reason` argument to `CancellationTokenSource#cancel` that can be used to provide a custom cancellation signal other than `CancelError`.
-
-# Reference Implementation
-
-A reference implementation can be found in the `prex` library:
-
-* npm: https://www.npmjs.com/package/prex or `npm install prex`
-* source: https://github.com/rbuckton/prex
-
-# Resources
-
-- [Overview slides](https://tc39.github.io/proposal-cancellation/CancellationPrimitives-tc39.pptx)
-
 # TODO
 
 The following is a high-level list of tasks to progress through each stage of the [TC39 proposal process](https://tc39.github.io/process-document/):
@@ -542,10 +170,9 @@ The following is a high-level list of tasks to progress through each stage of th
 [Champion]: #status
 [Prose]: #proposal
 [Examples]: #examples
-[API]: #cancellation-objects
-[Specification]: https://tc39.github.io/proposal-cancellation
+[Specification]: #todo
 [Transpiler]: #todo
-[Polyfill]: https://github.com/rbuckton/prex
+[Polyfill]: #todo
 [Stage3ReviewerSignOff]: #todo
 [Stage3EditorSignOff]: #todo
 [Test262PullRequest]: #todo
