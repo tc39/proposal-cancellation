@@ -1,5 +1,7 @@
 # ECMAScript Cancellation
 
+![Stage 4](https://badges.aleen42.com/src/tc39_5.svg)
+
 This proposal seeks to define an approach to user-controlled cancellation of asynchronous operations
 through the adoption of a set of native platform objects.
 
