@@ -6,7 +6,7 @@ through the adoption of a set of native platform objects.
 ## Status
 
 **Stage:** 1  
-**Champion:** Ron Buckton (@rbuckton), Brian Terlson (@bterlson), Domenic Denicola (@domenic), Yehuda Katz (@wycats)
+**Champion:** Ron Buckton (@rbuckton), James M. Snell (@jasnell)
 
 _For more information see the [TC39 proposal process](https://tc39.github.io/process-document/)._
 
