@@ -1,35 +1,22 @@
 {
-  "name": "ecmascript-cancellation",
-  "version": "1.0.0",
-  "description": "Proposal for a Cancellation API for ECMAScript",
   "private": true,
-  "scripts": {
-    "compile": "gulp build",
-    "start": "gulp start"
-  },
+  "name": "proposal-cancellation",
+  "description": "Proposal for a Cancellation API for ECMAScript",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tc39/proposal-cancellation.git"
   },
-  "keywords": [
-    "javascript",
-    "ecmascript",
-    "cancellation",
-    "cancellationtoken",
-    "cancel",
-    "canceltoken"
-  ],
   "author": "Ron Buckton (rbuckton@microsoft.com)",
-  "license": "SEE LICENSE IN https://tc39.github.io/ecma262/#sec-copyright-and-software-license",
-  "bugs": {
-    "url": "https://github.com/tc39/proposal-cancellation/issues"
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "mkdir -p build && ecmarkup --lint-spec --strict --load-biblio @tc39/ecma262-biblio --verbose --assets-dir build spec.html build/index.html && cp stage0/*.pptx build/",
+    "format": "emu-format --write spec.html"
   },
-  "homepage": "https://github.com/tc39/proposal-cancellation#readme",
-  "devDependencies": {
-    "del": "^2.2.2",
-    "ecmarkup": "^3.11.2",
-    "gulp": "^3.9.1",
-    "gulp-emu": "^1.1.0",
-    "gulp-live-server": "0.0.30"
+  "dependencies": {
+    "@tc39/ecma262-biblio": "2.2.3205",
+    "ecmarkup": "^25.0.3",
+    "jsdom": "^30.1.3",
+    "parse5-html-rewriting-stream": "^8.0.1",
+    "tmp": "^0.2.7"
   }
 }

@@ -1,43 +1,38 @@
 # ECMAScript Cancellation
 
-This proposal seeks to define an approach to user-controlled cancellation of asynchronous operations
-through the adoption of a set of native platform objects.
+This proposal seeks to add a to-be-determined subset of the WHATWG AbortController and AbortSignal interfaces to JavaScript, with minor modifications if absolutely necessary.
+
+Historically this proposal considered other approaches, which you can see in [the stage 0 README](stage0/README.md) and in git history. Since then, AbortController has shipped and become ubiquitous across a variety of JavaScript runtimes, and the committee does not believe it makes sense to standardize a different cancellation mechanism. As such the goal is now to do the spec work necessary for specifications (including the JavaScript specification itself) to use AbortController without needing the rest of the entailed machinery (such as EventTarget).
+
+This is not expected to affect developers on platforms that already provide AbortController, except that [some extensions may be necessary](https://github.com/whatwg/dom/pull/1425) and will be included on those platforms.
 
 ## Status
 
 **Stage:** 1  
-**Champion:** Ron Buckton (@rbuckton), James M. Snell (@jasnell)
+**Champions:** Ron Buckton ([@rbuckton](https://github.com/rbuckton)), James M. Snell ([@jasnell](https://github.com/jasnell)), Kevin Gibbons ([@bakkot](https://github.com/bakkot))
 
-_For more information see the [TC39 proposal process](https://tc39.github.io/process-document/)._
-
-> NOTE: TC39 has decided to investigate a cancellation mechanism in the core library.
-> As such, Cancellation has moved to Stage 1, but **not** in the form of the previous Stage 0 proposal.
-> Instead, TC39 believes this is a space that requires further investigation and discussion.
-> The previous Stage 0 proposal can be found [here](stage0/README.md).
+_For more information see the [TC39 proposal process](https://tc39.es/process-document/)._
 
 ## Authors
 
-* Ron Buckton (@rbuckton)
+* Ron Buckton ([@rbuckton](https://github.com/rbuckton))
+* Kevin Gibbons ([@bakkot](https://github.com/bakkot))
 
-# Motivations
+## Motivations
 
-* A clear and consistent approach to cancelling asynchronous operations:
-  * Asynchronous functions or [iterators](https://github.com/tc39/proposal-async-iteration)
-  * [Fetching](https://fetch.spec.whatwg.org/#fetch-api) remote resources (HTTP, I/O, etc.)
-  * Interacting with background tasks (Web Workers, forked processes, etc.)
-  * Long-running operations ([animations](https://w3c.github.io/web-animations/), etc.)
+* A clear and consistent approach to cancelling asynchronous operations
 * A general-purpose coordination mechanism with many use cases:
   * Synchronous observation (e.g. in a game loop)
-  * Asynchronous observation (e.g. aborting an XMLHttpRequest, stopping an animation)
-  * Easy to use in async functions.
+  * Asynchronous observation (e.g. a network request)
+  * Easy to use in async functions
 * A common API that is reusable in multiple host environments (Browser, NodeJS, IoT/embedded, etc.).
 
-# Prior Art
+## Prior Art
 
-* [Cancellation in Managed Threads](https://msdn.microsoft.com/en-us/library/dd997364(v=vs.110)) in the .NET Framework
+* [Cancellation in Managed Threads](https://learn.microsoft.com/en-us/dotnet/standard/threading/cancellation-in-managed-threads) in the .NET Framework
 
 ## Architecture
-The following are some architectural observations provided by **Dean Tribble** on the [es-discuss mailing list](https://mail.mozilla.org/pipermail/es-discuss/2015-March/041887.html):
+The following are some architectural observations provided by **Dean Tribble** on the [es-discuss mailing list](https://web.archive.org/web/20151210071401/https://mail.mozilla.org/pipermail/es-discuss/2015-March/041887.html):
 
 > *Cancel requests, not results*  
 > Promises are like object references for async; any particular promise might
@@ -128,54 +123,3 @@ The following are some architectural observations provided by **Dean Tribble** o
 > quite different than when it's got everything it needs displayed for the
 > current page. That's the reason why the "register" method returns a
 > capability to unregister the action.
-
-# TODO
-
-The following is a high-level list of tasks to progress through each stage of the [TC39 proposal process](https://tc39.github.io/process-document/):
-
-### Stage 1 Entrance Criteria
-
-* [x] Identified a "[champion][Champion]" who will advance the addition.  
-* [x] [Prose][Prose] outlining the problem or need and the general shape of a solution.  
-* [x] Illustrative [examples][Examples] of usage.  
-* [x] High-level [API][API].  
-
-### Stage 2 Entrance Criteria
-
-* [ ] [Initial specification text][Specification].  
-* [ ] _Optional_. [Transpiler support][Transpiler] (for syntax) or [Polyfill][Polyfill] (for API).  
-
-### Stage 3 Entrance Criteria
-
-* [ ] [Complete specification text][Specification].  
-* [ ] Designated reviewers have [signed off][Stage3ReviewerSignOff] on the current spec text.  
-* [ ] The ECMAScript editor has [signed off][Stage3EditorSignOff] on the current spec text.  
-
-### Stage 4 Entrance Criteria
-
-* [ ] [Test262](https://github.com/tc39/test262) acceptance tests have been written for mainline usage scenarios and [merged][Test262PullRequest].  
-* [ ] Two compatible implementations which pass the acceptance tests: [\[1\]][Implementation1], [\[2\]][Implementation2].  
-* [ ] A [pull request][Ecma262PullRequest] has been sent to tc39/ecma262 with the integrated spec text.  
-* [ ] The ECMAScript editor has signed off on the [pull request][Ecma262PullRequest].  
-
-<!-- The following are shared links used throughout the README: -->
-
-[Object]: https://tc39.github.io/ecma262/#sec-object-constructor
-[String]: https://tc39.github.io/ecma262/#sec-string-constructor
-[Boolean]: https://tc39.github.io/ecma262/#sec-boolean-constructor
-[Function]: https://tc39.github.io/ecma262/#sec-function-constructor
-[Error]: https://tc39.github.io/ecma262/#sec-error-constructor
-[Iterable]: https://tc39.github.io/ecma262/#sec-symbol.iterator
-[JobQueue]: https://tc39.github.io/ecma262/#sec-jobs-and-job-queues
-[Champion]: #status
-[Prose]: #proposal
-[Examples]: #examples
-[Specification]: #todo
-[Transpiler]: #todo
-[Polyfill]: #todo
-[Stage3ReviewerSignOff]: #todo
-[Stage3EditorSignOff]: #todo
-[Test262PullRequest]: #todo
-[Implementation1]: #todo
-[Implementation2]: #todo
-[Ecma262PullRequest]: #todo

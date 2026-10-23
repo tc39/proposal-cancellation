@@ -1,0 +1,114 @@
+name: Publish PR
+run-name: ${{ github.event.workflow_run.display_title }}
+
+on:
+  workflow_run:
+    workflows: ['Render PR']
+    types: [completed]
+
+env:
+  # Must match ./render-pr.yml
+  ARTIFACT_NAME: ${{ vars.ARTIFACT_NAME || 'result' }}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: >
+      ${{
+        !github.event.repository.fork
+        && github.event.workflow_run.event == 'pull_request'
+        && github.event.workflow_run.conclusion == 'success'
+      }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ljharb/actions/node/install@main
+      name: 'nvm install lts/* && npm install'
+      with:
+        node-version: lts/*
+    - name: Print event info
+      uses: actions/github-script@v7
+      with:
+        script: 'console.log(${{ toJson(github.event) }});'
+    - name: Download zipball
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const run_id = ${{ github.event.workflow_run.id }};
+          const name = process.env.ARTIFACT_NAME;
+          const listArtifactsQuery = { owner, repo, run_id, name };
+          const listArtifactsResponse = await github.rest.actions.listWorkflowRunArtifacts(listArtifactsQuery);
+          const { total_count, artifacts } = listArtifactsResponse.data;
+          if (total_count !== 1) {
+            const summary = artifacts?.map(({ name, size_in_bytes, url }) => ({ name, size_in_bytes, url }));
+            const detail = JSON.stringify(summary ?? []);
+            throw new RangeError(`Expected 1 ${name} artifact, got ${total_count} ${detail}`);
+          }
+          const artifact_id = artifacts[0].id;
+          console.log(`downloading artifact ${artifact_id}`);
+          const downloadResponse = await github.rest.actions.downloadArtifact({
+            owner,
+            repo,
+            artifact_id,
+            archive_format: 'zip',
+          });
+          const fs = require('fs');
+          fs.writeFileSync('${{ github.workspace }}/result.zip', Buffer.from(downloadResponse.data));
+    - name: Provide result directory
+      run: rm -rf result && mkdir -p result
+    - run: unzip -o result.zip -d result
+    - run: ls result
+    - name: Extract PR data
+      run: |
+        cd result
+        awk -v ok=1 '
+          NR == 1 && match($0, /^[1-9][0-9]* [0-9a-fA-F]{7,}$/) {
+            print "PR=" $1;
+            print "COMMIT=" $2;
+            next;
+          }
+          { ok = 0; }
+          END { exit !ok; }
+        ' pr-data.txt >> "$GITHUB_ENV"
+        rm pr-data.txt
+    - name: Insert preview warning
+      run: |
+        tmp="$(mktemp -u XXXXXXXX.json)"
+        export REPO_URL="https://github.com/$GITHUB_REPOSITORY"
+        jq -n '
+          def repo_link($args): $args as [$path, $contents]
+            | (env.REPO_URL + ($path // "")) as $url
+            | "<a href=\"\($url | @html)\">\($contents // $url)</a>";
+          {
+            SUMMARY: "PR #\(env.PR)",
+            REPO_LINK: repo_link([]),
+            PR_LINK: repo_link(["/pull/" + env.PR, "PR #\(env.PR)"]),
+            COMMIT_LINK: ("commit " + repo_link(["/commit/" + env.COMMIT, "<code>\(env.COMMIT)</code>"])),
+          }
+        ' > "$tmp"
+        find result -name '*.html' -exec \
+          node scripts/insert_warning.mjs scripts/pr_preview_warning.html "$tmp" '{}' '+'
+    - name: Publish to gh-pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        branch: gh-pages
+        folder: result
+        target-folder: pr/${{ env.PR }}
+    - name: Determine gh-pages url
+      id: get-pages-url
+      run: |
+        gh_pages_url="https://$(printf '%s' "$GITHUB_REPOSITORY" \
+          | sed 's#/#.github.io/#; s#^tc39.github.io/#tc39.es/#')"
+        echo "url=$gh_pages_url" >> $GITHUB_OUTPUT
+    - name: Provide PR comment
+      uses: phulsechinmay/rewritable-pr-comment@v0.3.0
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_ID: ${{ env.PR }}
+        message: >
+          The rendered spec for this PR is available at
+          ${{ steps.get-pages-url.outputs.url }}/pr/${{ env.PR }}.

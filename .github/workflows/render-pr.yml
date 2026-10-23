@@ -1,0 +1,39 @@
+name: Render PR
+
+on: [pull_request]
+
+env:
+  # Must match ./publish-pr.yml
+  ARTIFACT_NAME: ${{ vars.ARTIFACT_NAME || 'result' }}
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: '[node LTS] npm install'
+      uses: ljharb/actions/node/install@main
+      with:
+        node-version: lts/*
+    - run: npm run build
+    - name: Save PR data
+      env:
+        PR: ${{ github.event.number }}
+      run: echo "$PR $(git rev-parse --verify HEAD)" > build/pr-data.txt
+    - uses: actions/upload-artifact@v4
+      id: upload
+      if: ${{ !github.event.repository.fork }}
+      with:
+        name: ${{ env.ARTIFACT_NAME }}
+        path: build/
+    - name: Echo artifact ID
+      run: echo 'Artifact ID is ${{ steps.upload.outputs.artifact-id }}'
+    - name: Verify artifact discoverability
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const run_id = ${{ github.run_id }};
+          const listArtifactsResponse = await github.rest.actions.listWorkflowRunArtifacts({ owner, repo, run_id });
+          console.log(`artifacts for run id ${run_id}`, listArtifactsResponse?.data);

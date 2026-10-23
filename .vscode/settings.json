@@ -1,8 +1,0 @@
-{
-    "[markdown]": {
-        "files.trimTrailingWhitespace": false
-    },
-    "files.associations": {
-        "*.html": "ecmarkup"
-    }
-}
