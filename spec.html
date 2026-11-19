@@ -8,6 +8,979 @@ contributors: Ron Buckton, Kevin Gibbons
 
 <emu-intro id="sec-intro">
   <h1>Introduction</h1>
-  <p>This proposal defines an approach to user-controlled cancellation of asynchronous operations through the adoption of a set of native platform objects.</p>
+  <p>This proposal brings a subset of WHATWG DOM's <a href="https://dom.spec.whatwg.org/#aborting-ongoing-activities">AbortController and AbortSignal</a> into ECMAScript, so that ECMAScript (and other specifications) can use them without depending on the rest of the web platform (in particular `EventTarget` and `DOMException`).</p>
+  <p>For hosts which already provide AbortController and AbortSignal, this proposal preserves their existing API, with the iterator-closing change described below. It also adds `AbortSignal.prototype.addAbortCallback` (see <a href="https://github.com/whatwg/dom/pull/1425">whatwg/dom#1425</a>). Web-platform-specific behaviour is provided through host hooks:</p>
+  <ul>
+    <li>HostCreateAbortError, which creates the default abort reason (on the web, a `DOMException` whose `name` is *"AbortError"*).</li>
+    <li>HostInitializeAbortController, which initializes host-defined state on every new AbortController.</li>
+    <li>HostInitializeAbortSignal, which initializes host-defined state on every new AbortSignal, including its event listener list on the web.</li>
+    <li>HostCreateAbortCallbackAlgorithm, which captures the callback context at registration and supplies the steps for synchronous invocation and exception reporting.</li>
+    <li>HostAbortSignalAborted, which is called after a signal's abort algorithms have run (on the web, this fires the `abort` event).</li>
+  </ul>
+  <p>Hosts may also change the [[Prototype]] of %AbortSignal% and %AbortSignal.prototype% (on the web, to %EventTarget% and %EventTarget.prototype%) and add properties to them, such as `onabort` and `AbortSignal.timeout`. See <emu-xref href="#sec-abortsignal-host-integration"></emu-xref>.</p>
+  <p>`Atomics.waitAsync` now accepts an options object with optional `timeout` and `signal` properties, allowing an asynchronous wait to be aborted. In addition, `Atomics.wait` and `Atomics.waitAsync` now throw a *TypeError* for timeout values that previously underwent numeric coercion, such as *"100"*, and a *RangeError* for *NaN*.</p>
   <p>See <a href="https://github.com/tc39/proposal-cancellation">the proposal repository</a> for background material and discussion.</p>
+
+  <emu-note type="editor">
+    <p>Open questions and known deviations from the DOM specification:</p>
+    <ul>
+      <li>`addAbortCallback` returns a disposable registration object whose `remove` and `[Symbol.dispose]` properties initially refer to the same method for unregistering the callback. In whatwg/dom#1425, `addAbortCallback` currently returns *undefined*.</li>
+      <li>When the signal is already aborted, `addAbortCallback` calls the callback and then throws the signal's abort reason. In whatwg/dom#1425, it calls the callback and returns normally.</li>
+      <li>The DOM specification iterates over a signal's abort algorithms and then empties the set. Here, the algorithms are removed one at a time as they run, so when an abort callback disposes the registration of a callback which has not yet run, that second callback does not run. The DOM specification does not clearly specify what happens in this case.</li>
+      <li>Unlike other built-ins in this specification, methods and accessors on these objects are enumerable to match the Web IDL conventions which existing implementations follow.</li>
+      <li>`AbortSignal.any` closes its argument's iterator when it encounters a non-AbortSignal element, following ECMAScript convention. Web IDL's sequence conversion does not close the iterator.</li>
+      <li>DOM can retain its <a href="https://dom.spec.whatwg.org/#abort-signal-garbage-collection">garbage collection rule for dependent signals</a> and its <a href="https://dom.spec.whatwg.org/#dom-abortsignal-timeout">requirement to retain a timeout signal while it has an `abort` event listener</a> when it adopts these operations. Both rules are consistent with this specification, but neither is needed for aborts to be delivered correctly: when a timeout expires, its signal must be aborted whenever that would be observable, including through abort callbacks or dependent signals.</li>
+    </ul>
+  </emu-note>
 </emu-intro>
+
+<emu-clause id="sec-well-known-intrinsic-objects">
+  <h1>Well-Known Intrinsic Objects</h1>
+  <emu-note type="editor">Only the added rows of <emu-xref href="#table-well-known-intrinsic-objects"></emu-xref> are shown.</emu-note>
+  <emu-table id="table-well-known-intrinsic-objects" caption="Well-Known Intrinsic Objects" oldids="table-7">
+    <table>
+      <thead>
+        <tr>
+          <th>Intrinsic Name</th>
+          <th>Global Name</th>
+          <th>ECMAScript Language Association</th>
+        </tr>
+      </thead>
+      <tr>
+        <td><ins>%AbortCallbackRegistrationPrototype%</ins></td>
+        <td></td>
+        <td><ins>The prototype of abort callback registration objects (<emu-xref href="#sec-%abortcallbackregistrationprototype%-object"></emu-xref>)</ins></td>
+      </tr>
+      <tr>
+        <td><ins>%AbortController%</ins></td>
+        <td><ins>*"AbortController"*</ins></td>
+        <td><ins>The `AbortController` <emu-not-ref>constructor</emu-not-ref> (<emu-xref href="#sec-abortcontroller-constructor"></emu-xref>)</ins></td>
+      </tr>
+      <tr>
+        <td><ins>%AbortSignal%</ins></td>
+        <td><ins>*"AbortSignal"*</ins></td>
+        <td><ins>The `AbortSignal` <emu-not-ref>constructor</emu-not-ref> (<emu-xref href="#sec-abortsignal-constructor"></emu-xref>)</ins></td>
+      </tr>
+    </table>
+  </emu-table>
+</emu-clause>
+
+<emu-clause id="sec-constructor-properties-of-the-global-object">
+  <h1>Constructor Properties of the Global Object</h1>
+  <emu-note type="editor">Only the added subclauses are shown.</emu-note>
+
+  <emu-clause id="sec-constructor-properties-of-the-global-object-abortcontroller">
+    <h1><ins>AbortController ( . . . )</ins></h1>
+    <p><ins>See <emu-xref href="#sec-abortcontroller-constructor"></emu-xref>.</ins></p>
+  </emu-clause>
+
+  <emu-clause id="sec-constructor-properties-of-the-global-object-abortsignal">
+    <h1><ins>AbortSignal ( . . . )</ins></h1>
+    <p><ins>See <emu-xref href="#sec-abortsignal-constructor"></emu-xref>.</ins></p>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-cancellation">
+  <h1>Cancellation</h1>
+  <emu-note type="editor">This clause is added as a new subclause of <emu-xref href="#sec-control-abstraction-objects"></emu-xref>.</emu-note>
+
+  <p>An AbortController and its associated AbortSignal are used to request that one or more ongoing operations be cancelled. The code which starts an operation passes the AbortSignal to it. The AbortController can later be used to <em>abort</em> the signal, and code observing the signal can then stop its work.</p>
+
+  <emu-note>
+    <p>As with any other object, an implementation may reclaim the memory used by an AbortSignal, its abort algorithms, or its links to other signals whenever doing so has no observable effect.</p>
+    <p><strong>If a signal can still be aborted, the implementation must preserve every observable effect of that abort.</strong> Even if user code has dropped its last reference to the signal, a later abort must still run its registered abort algorithms and, on the web, dispatch its `abort` event. For example:</p>
+    <ul>
+      <li>Once an AbortController is unreachable, nothing can abort its signal. So the signal's abort algorithms can be discarded, and so can the signal once no code can reach it.</li>
+      <li>Suppose `AbortSignal.any([longLived, perRequest])` is called once per request. Each resulting dependent signal which no code can reach and which has no abort algorithms or event listeners can be discarded, along with its entry in `longLived`.[[DependentSignals]], even while `longLived` is still in use. Otherwise a long-lived signal would accumulate every dependent signal ever created from it.</li>
+      <li>If such a dependent signal has a callback registered with `addAbortCallback`, aborting one of its sources must still invoke that callback.</li>
+      <li>An entry in a dependent signal's [[SourceSignals]] can be discarded once that source can no longer be aborted.</li>
+    </ul>
+    <p>The <a href="https://dom.spec.whatwg.org/#abort-signal-garbage-collection">DOM garbage collection rule</a> for dependent signals is one way to implement this.</p>
+  </emu-note>
+
+  <p>Unlike other built-in objects in this specification, every function-valued data property and every accessor property described in this clause has the attribute [[Enumerable]]: *true*, except for properties whose key is a Symbol and properties named *"constructor"*.</p>
+  <emu-note>
+    <p>This matches the Web IDL conventions which existing implementations of these classes follow.</p>
+  </emu-note>
+
+  <emu-clause id="sec-abortsignal-abstract-operations">
+    <h1>Abstract Operations for AbortSignal Objects</h1>
+
+    <emu-clause id="sec-createabortsignal" type="abstract operation">
+      <h1>
+        CreateAbortSignal (
+          _realm_: a Realm Record,
+          optional _proto_: an Object,
+          optional _additionalInternalSlotsList_: a List of names of internal slots,
+        ): an AbortSignal
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It creates a new AbortSignal which is not aborted. Other specifications may use _additionalInternalSlotsList_ to create AbortSignals with additional internal slots (see <emu-xref href="#sec-abortsignal-host-integration"></emu-xref>). This operation may be invoked by other specifications.</dd>
+      </dl>
+      <emu-alg>
+        1. If _proto_ is not present, set _proto_ to _realm_.[[Intrinsics]].[[%AbortSignal.prototype%]].
+        1. If _additionalInternalSlotsList_ is not present, set _additionalInternalSlotsList_ to a new empty List.
+        1. Let _internalSlotsList_ be « [[AbortReason]], [[AbortAlgorithms]], [[SourceSignals]], [[DependentSignals]] ».
+        1. Append to _internalSlotsList_ the internal slot names the host specifies for all AbortSignal instances.
+        1. Set _internalSlotsList_ to the list-concatenation of _internalSlotsList_ and _additionalInternalSlotsList_.
+        1. Let _signal_ be OrdinaryObjectCreate(_proto_, _internalSlotsList_).
+        1. Set _signal_.[[AbortReason]] to *undefined*.
+        1. Set _signal_.[[AbortAlgorithms]] to a new empty List.
+        1. Set _signal_.[[SourceSignals]] to ~not-dependent~.
+        1. Set _signal_.[[DependentSignals]] to a new empty List.
+        1. Perform HostInitializeAbortSignal(_signal_, _realm_).
+        1. Return _signal_.
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-isaborted" type="abstract operation">
+      <h1>
+        IsAborted (
+          _signal_: an AbortSignal,
+        ): a Boolean
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>This operation may be invoked by other specifications.</dd>
+      </dl>
+      <emu-alg>
+        1. If _signal_.[[AbortReason]] is *undefined*, return *false*.
+        1. Return *true*.
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-abort-algorithm-registration-records">
+      <h1>Abort Algorithm Registration Records</h1>
+      <p>An <dfn variants="Abort Algorithm Registration Records">Abort Algorithm Registration Record</dfn> represents a registration of an algorithm on an AbortSignal.</p>
+      <p>Abort Algorithm Registration Records have the fields listed in <emu-xref href="#table-abort-algorithm-registration-record-fields"></emu-xref>.</p>
+      <emu-table id="table-abort-algorithm-registration-record-fields" caption="Abort Algorithm Registration Record Fields">
+        <table>
+          <thead>
+            <tr>
+              <th>Field Name</th>
+              <th>Value</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tr>
+            <td>[[Signal]]</td>
+            <td>an AbortSignal or ~empty~</td>
+            <td>The signal on which the algorithm is registered, or ~empty~ once the registration has been removed.</td>
+          </tr>
+          <tr>
+            <td>[[Algorithm]]</td>
+            <td>an Abstract Closure with no parameters or ~empty~</td>
+            <td>The algorithm to perform when [[Signal]] is aborted, or ~empty~ once the registration has been removed.</td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+
+    <emu-clause id="sec-addabortalgorithm" type="abstract operation">
+      <h1>
+        AddAbortAlgorithm (
+          _signal_: an AbortSignal,
+          _algorithm_: an Abstract Closure with no parameters,
+        ): either an Abort Algorithm Registration Record or ~already-aborted~
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It arranges for _algorithm_ to be performed when _signal_ is aborted. _algorithm_ must complete normally. This operation may be invoked by other specifications.</dd>
+      </dl>
+      <emu-alg>
+        1. If IsAborted(_signal_) is *true*, return ~already-aborted~.
+        1. Let _entry_ be the Abort Algorithm Registration Record { [[Signal]]: _signal_, [[Algorithm]]: _algorithm_ }.
+        1. Append _entry_ to _signal_.[[AbortAlgorithms]].
+        1. Return _entry_.
+      </emu-alg>
+      <emu-note>
+        <p>If _signal_ is already aborted, _algorithm_ is not registered and will never be performed. Callers usually need to handle that case, either by checking IsAborted(_signal_) beforehand or by checking for ~already-aborted~.</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-removeabortalgorithm" type="abstract operation">
+      <h1>
+        RemoveAbortAlgorithm (
+          _entry_: an Abort Algorithm Registration Record,
+        ): ~unused~
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>This operation may be invoked by other specifications.</dd>
+      </dl>
+      <emu-alg>
+        1. Let _signal_ be _entry_.[[Signal]].
+        1. If _signal_ is ~empty~, return ~unused~.
+        1. Assert: _signal_.[[AbortAlgorithms]] contains _entry_.
+        1. Remove _entry_ from _signal_.[[AbortAlgorithms]].
+        1. Set _entry_.[[Signal]] to ~empty~.
+        1. Set _entry_.[[Algorithm]] to ~empty~.
+        1. Return ~unused~.
+      </emu-alg>
+    </emu-clause>
+
+    <emu-clause id="sec-signalabort" type="abstract operation">
+      <h1>
+        SignalAbort (
+          _signal_: an AbortSignal,
+          _reason_: an ECMAScript language value,
+        ): ~unused~
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It aborts _signal_ and any signals which depend on it. If _reason_ is *undefined*, the abort reason is created by HostCreateAbortError. This operation may be invoked by other specifications, but only with a signal which is not a dependent signal.</dd>
+      </dl>
+      <emu-alg>
+        1. Assert: _signal_.[[SourceSignals]] is ~not-dependent~.
+        1. If IsAborted(_signal_) is *true*, return ~unused~.
+        1. If _reason_ is *undefined*, set _reason_ to HostCreateAbortError().
+        1. Set _signal_.[[AbortReason]] to _reason_.
+        1. Let _dependentSignalsToAbort_ be a new empty List.
+        1. For each element _dependentSignal_ of _signal_.[[DependentSignals]], do
+          1. If IsAborted(_dependentSignal_) is *false*, then
+            1. Set _dependentSignal_.[[AbortReason]] to _reason_.
+            1. Append _dependentSignal_ to _dependentSignalsToAbort_.
+        1. Perform RunAbortSteps(_signal_).
+        1. For each element _dependentSignal_ of _dependentSignalsToAbort_, do
+          1. Perform RunAbortSteps(_dependentSignal_).
+        1. Return ~unused~.
+      </emu-alg>
+      <emu-note>
+        <p>A dependent signal is aborted only through its sources. Because CreateDependentAbortSignal links new signals to the sources of a dependent signal rather than to the dependent signal itself, aborting a dependent signal directly would not abort the signals created from it.</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-runabortsteps" type="abstract operation">
+      <h1>
+        RunAbortSteps (
+          _signal_: an AbortSignal,
+        ): ~unused~
+      </h1>
+      <dl class="header">
+      </dl>
+      <emu-alg>
+        1. Assert: IsAborted(_signal_) is *true*.
+        1. Repeat, while _signal_.[[AbortAlgorithms]] is not empty,
+          1. Let _entry_ be the first element of _signal_.[[AbortAlgorithms]].
+          1. Let _algorithm_ be _entry_.[[Algorithm]].
+          1. Perform RemoveAbortAlgorithm(_entry_).
+          1. Perform _algorithm_().
+        1. Perform HostAbortSignalAborted(_signal_).
+        1. Return ~unused~.
+      </emu-alg>
+      <emu-note>
+        <p>By the time a source signal's first abort algorithm runs, every previously unaborted signal that depends on it already has the same abort reason.</p>
+        <p>Callbacks registered with `addAbortCallback` and abort algorithms added by host code or other specifications share a single list, so they run interleaved in the order in which they were registered.</p>
+        <p>Each algorithm is removed before it is performed, so an algorithm removed by an earlier one (for example, by disposing an abort callback registration) is never performed. Disposing the same registration again has no effect.</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-createdependentabortsignal" type="abstract operation">
+      <h1>
+        CreateDependentAbortSignal (
+          _signals_: a List of AbortSignals,
+          _realm_: a Realm Record,
+          optional _proto_: an Object,
+          optional _additionalInternalSlotsList_: a List of names of internal slots,
+        ): an AbortSignal
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It returns a new AbortSignal which is aborted when any element of _signals_ is aborted. _proto_ and _additionalInternalSlotsList_ are as in CreateAbortSignal; for example, the web platform uses them to create a `TaskSignal`. This operation may be invoked by other specifications.</dd>
+      </dl>
+      <emu-alg>
+        1. If _proto_ is not present, set _proto_ to _realm_.[[Intrinsics]].[[%AbortSignal.prototype%]].
+        1. If _additionalInternalSlotsList_ is not present, set _additionalInternalSlotsList_ to a new empty List.
+        1. Let _resultSignal_ be CreateAbortSignal(_realm_, _proto_, _additionalInternalSlotsList_).
+        1. For each element _signal_ of _signals_, do
+          1. If IsAborted(_signal_) is *true*, then
+            1. Set _resultSignal_.[[AbortReason]] to _signal_.[[AbortReason]].
+            1. Return _resultSignal_.
+        1. Set _resultSignal_.[[SourceSignals]] to a new empty List.
+        1. For each element _signal_ of _signals_, do
+          1. If _signal_.[[SourceSignals]] is ~not-dependent~, let _sourceSignals_ be « _signal_ ».
+          1. Else, let _sourceSignals_ be _signal_.[[SourceSignals]].
+          1. For each element _sourceSignal_ of _sourceSignals_, do
+            1. Assert: IsAborted(_sourceSignal_) is *false* and _sourceSignal_.[[SourceSignals]] is ~not-dependent~.
+            1. If _resultSignal_.[[SourceSignals]] does not contain _sourceSignal_, then
+              1. Append _sourceSignal_ to _resultSignal_.[[SourceSignals]].
+              1. Append _resultSignal_ to _sourceSignal_.[[DependentSignals]].
+        1. Return _resultSignal_.
+      </emu-alg>
+      <emu-note>
+        <p>A dependent signal is linked directly to the non-dependent signals it ultimately depends on, never to another dependent signal, so the chain of signals traversed when aborting is never longer than one link.</p>
+        <p>For when an implementation can discard dependent signals and the links between signals, see the note in <emu-xref href="#sec-cancellation"></emu-xref>.</p>
+      </emu-note>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-abortsignal-host-integration">
+    <h1>Host Integration</h1>
+
+    <p>The [[Prototype]] internal slots of %AbortSignal% and %AbortSignal.prototype% are host-defined. If the host does not define them, they are %Function.prototype% and %Object.prototype%, respectively. A host which defines them must set them before any ECMAScript code is evaluated in the realm (for example, in the host-defined steps of InitializeHostDefinedRealm). Hosts may also define additional properties on %AbortSignal%, %AbortSignal.prototype%, %AbortController%, and %AbortController.prototype%.</p>
+    <p>A host may specify additional internal slots for all AbortController instances and for all AbortSignal instances. These slots, along with any passed to CreateAbortSignal or CreateDependentAbortSignal as _additionalInternalSlotsList_, are allocated when the object is created. The complete list of internal slot names used to create each object must contain no duplicates. The host initializes the slots it specifies for all instances in HostInitializeAbortController and HostInitializeAbortSignal.</p>
+    <emu-note>
+      <p>On the web platform, %AbortSignal% inherits from %EventTarget% and %AbortSignal.prototype% inherits from %EventTarget.prototype%. The host also defines `AbortSignal.prototype.onabort` and `AbortSignal.timeout`.</p>
+    </emu-note>
+
+    <emu-clause id="sec-hostcreateabortcallbackalgorithm" type="host-defined abstract operation">
+      <h1>
+        HostCreateAbortCallbackAlgorithm (
+          _callback_: a function object,
+        ): an Abstract Closure with no parameters
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It captures any host context needed to invoke _callback_.</dd>
+      </dl>
+      <p>An implementation of HostCreateAbortCallbackAlgorithm must not evaluate any ECMAScript code. Each time the returned closure is performed, it must synchronously call _callback_ once with *undefined* as the *this* value and no arguments. The closure must return ~unused~.</p>
+      <p>The default implementation of HostCreateAbortCallbackAlgorithm performs the following steps when called:</p>
+      <emu-alg>
+        1. Return a new Abstract Closure with no parameters that captures _callback_ and performs the following steps when called:
+          1. Perform Completion(Call(_callback_, *undefined*)).
+          1. Return ~unused~.
+      </emu-alg>
+      <emu-note>
+        <p>On the web platform, the host captures the Web IDL callback context at registration. The closure <a href="https://webidl.spec.whatwg.org/#invoke-a-callback-function">invokes the callback</a> with the "report" exception behaviour, which reports a thrown exception to the global object of the callback's associated realm.</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-hostcreateaborterror" type="host-defined abstract operation">
+      <h1>
+        HostCreateAbortError ( ): an Object
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It creates the value used as the abort reason when a signal is aborted without an explicit reason.</dd>
+      </dl>
+      <p>An implementation of HostCreateAbortError must conform to the following requirements:</p>
+      <ul>
+        <li>It must return a new error object in the current realm each time it is called.</li>
+        <li>The returned object must be initialized such that, with its prototype chain in its initial state, reading its *"name"* property would return *"AbortError"*.</li>
+        <li>It must not evaluate any ECMAScript code.</li>
+      </ul>
+      <p>The default implementation of HostCreateAbortError performs the following steps when called:</p>
+      <emu-alg>
+        1. Let _error_ be OrdinaryObjectCreate(%Error.prototype%, « [[ErrorData]] »).
+        1. Let _message_ be an implementation-defined String.
+        1. Perform CreateNonEnumerableDataPropertyOrThrow(_error_, *"message"*, _message_).
+        1. Perform CreateNonEnumerableDataPropertyOrThrow(_error_, *"name"*, *"AbortError"*).
+        1. Return _error_.
+      </emu-alg>
+      <emu-note>
+        <p>On the web platform, the host initializes the associated name and message of a new <a href="https://webidl.spec.whatwg.org/#idl-DOMException">`DOMException`</a>. Accessors on `DOMException.prototype` expose those values.</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-hostinitializeabortcontroller" type="host-defined abstract operation">
+      <h1>
+        HostInitializeAbortController (
+          _controller_: an AbortController,
+        ): ~unused~
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It initializes host-defined state on _controller_ in the current realm.</dd>
+      </dl>
+      <p>An implementation of HostInitializeAbortController must not evaluate any ECMAScript code or modify the internal slots specified by ECMAScript.</p>
+      <p>The default implementation of HostInitializeAbortController is to return ~unused~.</p>
+      <emu-note>
+        <p>Web IDL can use host-specified internal slots for [[Realm]] and [[PrimaryInterface]].</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-hostinitializeabortsignal" type="host-defined abstract operation">
+      <h1>
+        HostInitializeAbortSignal (
+          _signal_: an AbortSignal,
+          _realm_: a Realm Record,
+        ): ~unused~
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It initializes host-defined state on _signal_ in _realm_.</dd>
+      </dl>
+      <p>An implementation of HostInitializeAbortSignal must not evaluate any ECMAScript code or modify the internal slots specified by ECMAScript.</p>
+      <p>The default implementation of HostInitializeAbortSignal is to return ~unused~.</p>
+      <emu-note>
+        <p>Web IDL can use host-specified internal slots for [[Realm]] and [[PrimaryInterface]]. For example, <a href="https://fetch.spec.whatwg.org/#dom-request-clone">`Request.prototype.clone`</a> creates its dependent signal in the request's relevant realm, which can differ from the current realm. On the web platform, the host also initializes the state of an `EventTarget`, including its event listener list.</p>
+      </emu-note>
+    </emu-clause>
+
+    <emu-clause id="sec-hostabortsignalaborted" type="host-defined abstract operation">
+      <h1>
+        HostAbortSignalAborted (
+          _signal_: an AbortSignal,
+        ): ~unused~
+      </h1>
+      <dl class="header">
+        <dt>description</dt>
+        <dd>It is called after all of _signal_'s abort algorithms have been performed.</dd>
+      </dl>
+      <p>The default implementation of HostAbortSignalAborted is to return ~unused~.</p>
+      <emu-note>
+        <p>On the web platform, this fires an event named `abort` at _signal_. Listeners for that event run after all abort algorithms (including callbacks registered with `addAbortCallback`), as they do today.</p>
+      </emu-note>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-abortcontroller-objects">
+    <h1>AbortController Objects</h1>
+
+    <emu-clause id="sec-abortcontroller-constructor">
+      <h1>The AbortController Constructor</h1>
+      <p>The <dfn variants="AbortControllers">AbortController</dfn> constructor:</p>
+      <ul>
+        <li>is <dfn>%AbortController%</dfn>.</li>
+        <li>is the initial value of the *"AbortController"* property of the global object.</li>
+        <li>creates and initializes a new AbortController when called as a constructor.</li>
+        <li>is not intended to be called as a function and will throw an exception when called in that manner.</li>
+        <li>may be used as the value in an `extends` clause of a class definition. Subclass constructors that intend to inherit the specified `AbortController` behaviour must include a `super` call to the `AbortController` constructor to create and initialize the subclass instance with the internal state necessary to support the built-in methods of `AbortController.prototype`.</li>
+      </ul>
+
+      <emu-clause id="sec-abortcontroller" type="built-in function">
+        <h1>AbortController ( )</h1>
+        <p>This function performs the following steps when called:</p>
+        <emu-alg>
+          1. If NewTarget is *undefined*, throw a *TypeError* exception.
+          1. Let _internalSlotsList_ be « [[Signal]] ».
+          1. Append to _internalSlotsList_ the internal slot names the host specifies for all AbortController instances.
+          1. Let _controller_ be ? OrdinaryCreateFromConstructor(NewTarget, *"%AbortController.prototype%"*, _internalSlotsList_).
+          1. Set _controller_.[[Signal]] to CreateAbortSignal(the current Realm Record).
+          1. Perform HostInitializeAbortController(_controller_).
+          1. Return _controller_.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-abortcontroller-constructor">
+      <h1>Properties of the AbortController Constructor</h1>
+      <p>The AbortController constructor:</p>
+      <ul>
+        <li>has a [[Prototype]] internal slot whose value is %Function.prototype%.</li>
+        <li>has the following properties:</li>
+      </ul>
+
+      <emu-clause id="sec-abortcontroller.prototype">
+        <h1>AbortController.prototype</h1>
+        <p>The initial value of `AbortController.prototype` is the AbortController prototype object.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-abortcontroller-prototype-object">
+      <h1>Properties of the AbortController Prototype Object</h1>
+      <p>The <dfn>AbortController prototype object</dfn>:</p>
+      <ul>
+        <li>is <dfn>%AbortController.prototype%</dfn>.</li>
+        <li>has a [[Prototype]] internal slot whose value is %Object.prototype%.</li>
+        <li>is an ordinary object.</li>
+        <li>does not have a [[Signal]] internal slot.</li>
+      </ul>
+
+      <emu-clause id="sec-abortcontroller.prototype.abort" type="built-in function">
+        <h1>AbortController.prototype.abort ( [ _reason_ ] )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _controller_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_controller_, [[Signal]]).
+          1. Perform SignalAbort(_controller_.[[Signal]], _reason_).
+          1. Return *undefined*.
+        </emu-alg>
+        <emu-note>
+          <p>If _reason_ is *undefined* (including when it is not passed), the signal's abort reason is created by HostCreateAbortError.</p>
+        </emu-note>
+      </emu-clause>
+
+      <emu-clause id="sec-abortcontroller.prototype.constructor">
+        <h1>AbortController.prototype.constructor</h1>
+        <p>The initial value of `AbortController.prototype.constructor` is %AbortController%.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-get-abortcontroller.prototype.signal" type="built-in function">
+        <h1>get AbortController.prototype.signal</h1>
+        <p>`AbortController.prototype.signal` is an accessor property whose set accessor function is *undefined*. Its get accessor function performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _controller_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_controller_, [[Signal]]).
+          1. Return _controller_.[[Signal]].
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abortcontroller.prototype-%symbol.tostringtag%">
+        <h1>AbortController.prototype [ %Symbol.toStringTag% ]</h1>
+        <p>The initial value of the %Symbol.toStringTag% property is the String value *"AbortController"*.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-abortcontroller-instances">
+      <h1>Properties of AbortController Instances</h1>
+      <p>AbortController instances are ordinary objects that inherit properties from the AbortController prototype object. AbortController instances have the internal slots described in <emu-xref href="#table-internal-slots-of-abortcontroller-instances"></emu-xref>.</p>
+      <emu-table id="table-internal-slots-of-abortcontroller-instances" caption="Internal Slots of AbortController Instances">
+        <table>
+          <thead>
+            <tr>
+              <th>Internal Slot</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tr>
+            <td>[[Signal]]</td>
+            <td>an AbortSignal</td>
+            <td>The signal which this controller aborts.</td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-abortsignal-objects">
+    <h1>AbortSignal Objects</h1>
+
+    <emu-clause id="sec-abortsignal-constructor">
+      <h1>The AbortSignal Constructor</h1>
+      <p>The <dfn variants="AbortSignals">AbortSignal</dfn> constructor:</p>
+      <ul>
+        <li>is <dfn>%AbortSignal%</dfn>.</li>
+        <li>is the initial value of the *"AbortSignal"* property of the global object.</li>
+        <li>throws a *TypeError* exception when called as a function or as a constructor. AbortSignals are created through `AbortController`, `AbortSignal.abort`, `AbortSignal.any`, or by the host.</li>
+      </ul>
+
+      <emu-clause id="sec-abortsignal" type="built-in function">
+        <h1>AbortSignal ( )</h1>
+        <p>This function performs the following steps when called:</p>
+        <emu-alg>
+          1. Throw a *TypeError* exception.
+        </emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-abortsignal-constructor">
+      <h1>Properties of the AbortSignal Constructor</h1>
+      <p>The AbortSignal constructor:</p>
+      <ul>
+        <li>has a [[Prototype]] internal slot whose value is host-defined (see <emu-xref href="#sec-abortsignal-host-integration"></emu-xref>).</li>
+        <li>has the following properties:</li>
+      </ul>
+
+      <emu-clause id="sec-abortsignal.abort" type="built-in function">
+        <h1>AbortSignal.abort ( [ _reason_ ] )</h1>
+        <p>This function returns a new AbortSignal which is already aborted. It performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _signal_ be CreateAbortSignal(the current Realm Record).
+          1. If _reason_ is *undefined*, set _reason_ to HostCreateAbortError().
+          1. Set _signal_.[[AbortReason]] to _reason_.
+          1. Return _signal_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abortsignal.any" type="built-in function">
+        <h1>AbortSignal.any ( _signals_ )</h1>
+        <p>This function returns a new AbortSignal which is aborted when any element of _signals_ is aborted, with the abort reason of the element that caused it to be aborted. It performs the following steps when called:</p>
+        <emu-alg>
+          1. If _signals_ is not an Object, throw a *TypeError* exception.
+          1. Let _iteratorRecord_ be ? GetIterator(_signals_, ~sync~).
+          1. Let _signalsList_ be a new empty List.
+          1. Repeat,
+            1. Let _next_ be ? IteratorStepValue(_iteratorRecord_).
+            1. If _next_ is ~done~, then
+              1. Return CreateDependentAbortSignal(_signalsList_, the current Realm Record).
+            1. If _next_ is not an Object or _next_ does not have an [[AbortReason]] internal slot, then
+              1. Let _error_ be ThrowCompletion(a newly created *TypeError* object).
+              1. Return ? IteratorClose(_iteratorRecord_, _error_).
+            1. Append _next_ to _signalsList_.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abortsignal.prototype">
+        <h1>AbortSignal.prototype</h1>
+        <p>The initial value of `AbortSignal.prototype` is the AbortSignal prototype object.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *false* }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-the-abortsignal-prototype-object">
+      <h1>Properties of the AbortSignal Prototype Object</h1>
+      <p>The <dfn>AbortSignal prototype object</dfn>:</p>
+      <ul>
+        <li>is <dfn>%AbortSignal.prototype%</dfn>.</li>
+        <li>has a [[Prototype]] internal slot whose value is host-defined (see <emu-xref href="#sec-abortsignal-host-integration"></emu-xref>).</li>
+        <li>is an ordinary object.</li>
+        <li>does not have an [[AbortReason]] internal slot or any of the other internal slots of AbortSignal instances.</li>
+      </ul>
+
+      <emu-clause id="sec-abortsignal.prototype.addabortcallback" type="built-in function">
+        <h1>AbortSignal.prototype.addAbortCallback ( _callback_ )</h1>
+        <p>This method registers _callback_ to be called when the signal is aborted, and returns an abort callback registration object which can be used to unregister the callback. If the signal is already aborted, it instead calls _callback_ immediately and then throws the signal's abort reason. It performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _signal_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_signal_, [[AbortReason]]).
+          1. If IsCallable(_callback_) is *false*, throw a *TypeError* exception.
+          1. Let _algorithm_ be HostCreateAbortCallbackAlgorithm(_callback_).
+          1. Let _entry_ be AddAbortAlgorithm(_signal_, _algorithm_).
+          1. If _entry_ is ~already-aborted~, then
+            1. Perform _algorithm_().
+            1. Throw _signal_.[[AbortReason]].
+          1. Let _registration_ be OrdinaryObjectCreate(%AbortCallbackRegistrationPrototype%, « [[AbortRegistration]] »).
+          1. Set _registration_.[[AbortRegistration]] to _entry_.
+          1. Return _registration_.
+        </emu-alg>
+        <emu-note>
+          <p>The callback is called with *undefined* as its *this* value and with no arguments. Code which needs the abort reason can read it from the signal.</p>
+          <p>When the signal is already aborted, the callback is called before the abort reason is thrown, so that cleanup the callback performs (such as releasing a resource acquired just before registering it) still happens. An exception thrown by the callback is handled as described in <emu-xref href="#sec-hostcreateabortcallbackalgorithm"></emu-xref>, so in this case the method throws the signal's abort reason even if the callback throws.</p>
+          <p>Unlike with `addEventListener`, registering the same function multiple times causes it to be called multiple times. The signal retains the callback until it runs or is unregistered, but does not retain the public registration object, so that object can be collected while the callback is still pending.</p>
+        </emu-note>
+      </emu-clause>
+
+      <emu-clause id="sec-get-abortsignal.prototype.aborted" type="built-in function">
+        <h1>get AbortSignal.prototype.aborted</h1>
+        <p>`AbortSignal.prototype.aborted` is an accessor property whose set accessor function is *undefined*. Its get accessor function performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _signal_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_signal_, [[AbortReason]]).
+          1. Return IsAborted(_signal_).
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abortsignal.prototype.constructor">
+        <h1>AbortSignal.prototype.constructor</h1>
+        <p>The initial value of `AbortSignal.prototype.constructor` is %AbortSignal%.</p>
+      </emu-clause>
+
+      <emu-clause id="sec-get-abortsignal.prototype.reason" type="built-in function">
+        <h1>get AbortSignal.prototype.reason</h1>
+        <p>`AbortSignal.prototype.reason` is an accessor property whose set accessor function is *undefined*. Its get accessor function performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _signal_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_signal_, [[AbortReason]]).
+          1. Return _signal_.[[AbortReason]].
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abortsignal.prototype.throwifaborted" type="built-in function">
+        <h1>AbortSignal.prototype.throwIfAborted ( )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _signal_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_signal_, [[AbortReason]]).
+          1. If IsAborted(_signal_) is *true*, throw _signal_.[[AbortReason]].
+          1. Return *undefined*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-abortsignal.prototype-%symbol.tostringtag%">
+        <h1>AbortSignal.prototype [ %Symbol.toStringTag% ]</h1>
+        <p>The initial value of the %Symbol.toStringTag% property is the String value *"AbortSignal"*.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-abortsignal-instances">
+      <h1>Properties of AbortSignal Instances</h1>
+      <p>AbortSignal instances are ordinary objects that inherit properties from the AbortSignal prototype object. AbortSignal instances have the internal slots described in <emu-xref href="#table-internal-slots-of-abortsignal-instances"></emu-xref>. Hosts may create AbortSignal instances with additional internal slots (see <emu-xref href="#sec-abortsignal-host-integration"></emu-xref>).</p>
+      <emu-table id="table-internal-slots-of-abortsignal-instances" caption="Internal Slots of AbortSignal Instances">
+        <table>
+          <thead>
+            <tr>
+              <th>Internal Slot</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tr>
+            <td>[[AbortReason]]</td>
+            <td>an ECMAScript language value</td>
+            <td>The reason the signal was aborted, or *undefined* if it has not been aborted.</td>
+          </tr>
+          <tr>
+            <td>[[AbortAlgorithms]]</td>
+            <td>a List of Abort Algorithm Registration Records</td>
+            <td>The registrations to run in insertion order when the signal is aborted.</td>
+          </tr>
+          <tr>
+            <td>[[SourceSignals]]</td>
+            <td>a List of AbortSignals or ~not-dependent~</td>
+            <td>~not-dependent~ if this signal is not a dependent signal. Otherwise, the non-dependent signals which this signal depends on. A <dfn>dependent signal</dfn> is one created by CreateDependentAbortSignal from signals none of which were already aborted. A dependent signal created from an empty List of signals has an empty [[SourceSignals]] List, and is never aborted.</td>
+          </tr>
+          <tr>
+            <td>[[DependentSignals]]</td>
+            <td>a List of AbortSignals</td>
+            <td>The dependent signals which depend on this signal.</td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id="sec-abortcallbackregistration-objects">
+    <h1>Abort Callback Registration Objects</h1>
+    <p>An <dfn variants="abort callback registrations">abort callback registration</dfn> is an object returned by `AbortSignal.prototype.addAbortCallback`. Disposing it unregisters the corresponding callback. There is no constructor for abort callback registrations.</p>
+
+    <emu-clause id="sec-%abortcallbackregistrationprototype%-object">
+      <h1>The %AbortCallbackRegistrationPrototype% Object</h1>
+      <p>The <dfn>%AbortCallbackRegistrationPrototype%</dfn> object:</p>
+      <ul>
+        <li>has a [[Prototype]] internal slot whose value is %Object.prototype%.</li>
+        <li>is an ordinary object.</li>
+      </ul>
+
+      <emu-clause id="sec-%abortcallbackregistrationprototype%.remove" type="built-in function">
+        <h1>%AbortCallbackRegistrationPrototype%.remove ( )</h1>
+        <p>This method unregisters the callback if it has not yet been called. It performs the following steps when called:</p>
+        <emu-alg>
+          1. Let _registration_ be the *this* value.
+          1. Perform ? RequireInternalSlot(_registration_, [[AbortRegistration]]).
+          1. Perform RemoveAbortAlgorithm(_registration_.[[AbortRegistration]]).
+          1. Return *undefined*.
+        </emu-alg>
+      </emu-clause>
+
+      <emu-clause id="sec-%abortcallbackregistrationprototype%-%symbol.dispose%">
+        <h1>%AbortCallbackRegistrationPrototype% [ %Symbol.dispose% ] ( )</h1>
+        <p>The initial value of the `%Symbol.dispose%` property is %AbortCallbackRegistrationPrototype.remove%, defined in <emu-xref href="#sec-%abortcallbackregistrationprototype%.remove"></emu-xref>.</p>
+        <emu-note>
+          <p>This allows `using` declarations to scope a callback registration to a block. If `signal` is already aborted, `addAbortCallback` closes the connection and throws the abort reason, so the request is never sent:</p>
+          <pre><code class="javascript">
+            async function doWork(signal, connection, request) {
+              using _ = signal.addAbortCallback(() => connection.close());
+              await connection.send(request);
+            } // the callback is unregistered here
+          </code></pre>
+        </emu-note>
+      </emu-clause>
+
+      <emu-clause id="sec-%abortcallbackregistrationprototype%-%symbol.tostringtag%">
+        <h1>%AbortCallbackRegistrationPrototype% [ %Symbol.toStringTag% ]</h1>
+        <p>The initial value of the %Symbol.toStringTag% property is the String value *"AbortCallbackRegistration"*.</p>
+        <p>This property has the attributes { [[Writable]]: *false*, [[Enumerable]]: *false*, [[Configurable]]: *true* }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id="sec-properties-of-abortcallbackregistration-instances">
+      <h1>Properties of Abort Callback Registration Instances</h1>
+      <p>Abort callback registrations are ordinary objects that inherit properties from %AbortCallbackRegistrationPrototype%. They have the internal slots described in <emu-xref href="#table-internal-slots-of-abortcallbackregistration-instances"></emu-xref>.</p>
+      <emu-table id="table-internal-slots-of-abortcallbackregistration-instances" caption="Internal Slots of Abort Callback Registration Instances">
+        <table>
+          <thead>
+            <tr>
+              <th>Internal Slot</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tr>
+            <td>[[AbortRegistration]]</td>
+            <td>an Abort Algorithm Registration Record</td>
+            <td>The entry returned by AddAbortAlgorithm.</td>
+          </tr>
+        </table>
+      </emu-table>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id="sec-atomics">
+  <h1>Atomics</h1>
+
+  <emu-clause id="sec-waiter-record">
+    <h1>Waiter Record</h1>
+    <emu-note type="editor">Only the added field is shown.</emu-note>
+    <emu-table id="table-waiterrecord" caption="Waiter Record Fields">
+      <table>
+        <thead>
+          <tr><th>Field Name</th><th>Value</th><th>Meaning</th></tr>
+        </thead>
+        <tr>
+          <td><ins>[[AbortRegistration]]</ins></td>
+          <td><ins>an Abort Algorithm Registration Record or ~empty~</ins></td>
+          <td><ins>The registration for an abortable asynchronous wait. Only the waiting agent accesses this field.</ins></td>
+        </tr>
+      </table>
+    </emu-table>
+  </emu-clause>
+
+  <emu-clause id="sec-notifywaiter" type="abstract operation">
+    <h1>
+      NotifyWaiter (
+        _waiterList_: a WaiterList Record,
+        _waiterRecord_: a Waiter Record,
+      ): ~unused~
+    </h1>
+    <dl class="header">
+    </dl>
+    <emu-alg>
+      1. Assert: The surrounding agent is in the critical section for _waiterList_.
+      1. If _waiterRecord_.[[PromiseCapability]] is ~blocking~, then
+        1. Wake the agent whose signifier is _waiterRecord_.[[AgentSignifier]] from suspension.
+        1. NOTE: This causes the agent to resume execution in SuspendThisAgent.
+      1. Else if AgentSignifier() is _waiterRecord_.[[AgentSignifier]], then
+        1. <del>Let _promiseCapability_ be _waiterRecord_.[[PromiseCapability]].</del>
+        1. <del>Perform ! Call(_promiseCapability_.[[Resolve]], *undefined*, « _waiterRecord_.[[Result]] »).</del>
+        1. <ins>Perform ResolveAsyncWaiter(_waiterRecord_).</ins>
+      1. Else,
+        1. Perform EnqueueResolveInAgentJob(<del>_waiterRecord_.[[AgentSignifier]], _waiterRecord_.[[PromiseCapability]], _waiterRecord_.[[Result]]</del><ins>_waiterRecord_</ins>).
+      1. Return ~unused~.
+    </emu-alg>
+    <emu-note>
+      <p>An agent must not access another agent's promise capability in any capacity beyond passing it to the host.</p>
+    </emu-note>
+  </emu-clause>
+
+  <emu-clause id="sec-enqueueresolveinagentjob" type="abstract operation">
+    <h1>
+      EnqueueResolveInAgentJob (
+        <del>_agentSignifier_: an agent signifier,</del>
+        <del>_promiseCapability_: a PromiseCapability Record,</del>
+        <del>_resolution_: *"ok"* or *"timed-out"*,</del>
+        <ins>_waiterRecord_: a Waiter Record,</ins>
+      ): ~unused~
+    </h1>
+    <dl class="header">
+    </dl>
+    <emu-alg>
+      1. Let _resolveJob_ be a new Job Abstract Closure with no parameters that captures <del>_agentSignifier_, _promiseCapability_, and _resolution_</del><ins>_waiterRecord_</ins> and performs the following steps when called:
+        1. <del>Assert: AgentSignifier() is _agentSignifier_.</del>
+        1. <del>Perform ! Call(_promiseCapability_.[[Resolve]], *undefined*, « _resolution_ »).</del>
+        1. <ins>Perform ResolveAsyncWaiter(_waiterRecord_).</ins>
+        1. Return ~unused~.
+      1. Let _realmInTargetAgent_ be ! GetFunctionRealm(<del>_promiseCapability_</del><ins>_waiterRecord_.[[PromiseCapability]]</ins>.[[Resolve]]).
+      1. Assert: <del>_agentSignifier_</del><ins>_waiterRecord_.[[AgentSignifier]]</ins> is _realmInTargetAgent_.[[AgentSignifier]].
+      1. Perform HostEnqueueGenericJob(_resolveJob_, _realmInTargetAgent_).
+      1. Return ~unused~.
+    </emu-alg>
+  </emu-clause>
+
+  <emu-clause id="sec-resolveasyncwaiter" type="abstract operation">
+    <h1>
+      <ins>ResolveAsyncWaiter (
+        _waiterRecord_: a Waiter Record,
+      ): ~unused~</ins>
+    </h1>
+    <dl class="header">
+    </dl>
+    <emu-alg>
+      1. <ins>Assert: AgentSignifier() is _waiterRecord_.[[AgentSignifier]].</ins>
+      1. <ins>Let _entry_ be _waiterRecord_.[[AbortRegistration]].</ins>
+      1. <ins>If _entry_ is not ~empty~, perform RemoveAbortAlgorithm(_entry_).</ins>
+      1. <ins>Let _promiseCapability_ be _waiterRecord_.[[PromiseCapability]].</ins>
+      1. <ins>Perform ! Call(_promiseCapability_.[[Resolve]], *undefined*, « _waiterRecord_.[[Result]] »).</ins>
+      1. <ins>Return ~unused~.</ins>
+    </emu-alg>
+  </emu-clause>
+
+  <emu-clause id="sec-dowait" type="abstract operation">
+    <h1>
+      DoWait (
+        _mode_: ~sync~ or ~async~,
+        _ta_: an ECMAScript language value,
+        _index_: an ECMAScript language value,
+        _value_: an ECMAScript language value,
+        _timeout_: an ECMAScript language value,
+      ): either a normal completion containing either an Object, *"not-equal"*, *"timed-out"*, or *"ok"*, or a throw completion
+    </h1>
+    <dl class="header">
+    </dl>
+    <emu-alg>
+      1. Let _taRecord_ be ? ValidateIntegerTypedArray(_ta_, *true*).
+      1. Let _buffer_ be _taRecord_.[[Object]].[[ViewedArrayBuffer]].
+      1. If IsSharedArrayBuffer(_buffer_) is *false*, throw a *TypeError* exception.
+      1. Let _byteIndexInBuffer_ be ? ValidateAtomicAccess(_taRecord_, _index_).
+      1. Let _elementType_ be TypedArrayElementType(_ta_).
+      1. Assert: _elementType_ is either ~bigint64~ or ~int32~.
+      1. If _elementType_ is ~bigint64~, let _expected_ be ? ToBigInt64(_value_); else let _expected_ be ? ToInt32(_value_).
+      1. <del>Let _timeoutNumber_ be ? ToNumber(_timeout_).</del>
+      1. <ins>If _mode_ is ~async~ and _timeout_ is an Object, then</ins>
+        1. <ins>Let _timeoutNumber_ be ? Get(_timeout_, *"timeout"*).</ins>
+        1. <ins>Let _signal_ be ? Get(_timeout_, *"signal"*).</ins>
+      1. <ins>Else,</ins>
+        1. <ins>Let _timeoutNumber_ be _timeout_.</ins>
+        1. <ins>Let _signal_ be *undefined*.</ins>
+      1. <ins>If _timeoutNumber_ is *undefined*, set _timeoutNumber_ to *+∞*<sub>𝔽</sub>.</ins>
+      1. <ins>If _timeoutNumber_ is not a Number, throw a *TypeError* exception.</ins>
+      1. <ins>If _timeoutNumber_ is *NaN*, throw a *RangeError* exception.</ins>
+      1. <ins>If _signal_ is not *undefined*, then</ins>
+        1. <ins>Perform ? RequireInternalSlot(_signal_, [[AbortReason]]).</ins>
+        1. <ins>If IsAborted(_signal_) is *true*, throw _signal_.[[AbortReason]].</ins>
+      1. If _timeoutNumber_ is <del>either *NaN* or </del>*+∞*<sub>𝔽</sub>, let _realTimeout_ be +∞.
+      1. Else if _timeoutNumber_ is *-∞*<sub>𝔽</sub>, let _realTimeout_ be 0.
+      1. Else, let _realTimeout_ be max(ℝ(_timeoutNumber_), 0).
+      1. If _mode_ is ~sync~ and AgentCanSuspend() is *false*, throw a *TypeError* exception.
+      1. Let _block_ be _buffer_.[[ArrayBufferData]].
+      1. Let _waiterList_ be GetWaiterList(_block_, _byteIndexInBuffer_).
+      1. If _mode_ is ~sync~, then
+        1. Let _promiseCapability_ be ~blocking~.
+        1. Let _resultObj_ be *undefined*.
+      1. Else,
+        1. Let _promiseCapability_ be ! NewPromiseCapability(%Promise%).
+        1. Let _resultObj_ be OrdinaryObjectCreate(%Object.prototype%).
+      1. Perform EnterCriticalSection(_waiterList_).
+      1. Let _witness_ be GetValueFromBuffer(_buffer_, _byteIndexInBuffer_, _elementType_, *true*, ~seq-cst~).
+      1. If _expected_ ≠ _witness_, then
+        1. Perform LeaveCriticalSection(_waiterList_).
+        1. If _mode_ is ~sync~, return *"not-equal"*.
+        1. Perform ! CreateDataPropertyOrThrow(_resultObj_, *"async"*, *false*).
+        1. Perform ! CreateDataPropertyOrThrow(_resultObj_, *"value"*, *"not-equal"*).
+        1. Return _resultObj_.
+      1. If _realTimeout_ = 0 and _mode_ is ~async~, then
+        1. NOTE: There is no special handling of synchronous immediate timeouts. Asynchronous immediate timeouts have special handling in order to fail fast and avoid unnecessary Promise jobs.
+        1. Perform LeaveCriticalSection(_waiterList_).
+        1. Perform ! CreateDataPropertyOrThrow(_resultObj_, *"async"*, *false*).
+        1. Perform ! CreateDataPropertyOrThrow(_resultObj_, *"value"*, *"timed-out"*).
+        1. Return _resultObj_.
+      1. Let _thisAgent_ be AgentSignifier().
+      1. Let _now_ be the time value (UTC) identifying the current time.
+      1. Let _additionalTimeout_ be an implementation-defined non-negative mathematical value.
+      1. Let _timeoutTime_ be ℝ(_now_) + _realTimeout_ + _additionalTimeout_.
+      1. NOTE: When _realTimeout_ is +∞, _timeoutTime_ is also +∞.
+      1. Let _waiterRecord_ be a new Waiter Record { [[AgentSignifier]]: _thisAgent_, [[PromiseCapability]]: _promiseCapability_, [[TimeoutTime]]: _timeoutTime_, [[Result]]: *"ok"*<ins>, [[AbortRegistration]]: ~empty~</ins> }.
+      1. <ins>If _signal_ is not *undefined*, then</ins>
+        1. <ins>Let _algorithm_ be a new Abstract Closure with no parameters that captures _waiterList_, _waiterRecord_, _signal_, and _promiseCapability_ and performs the following steps when called:</ins>
+          1. <ins>Perform EnterCriticalSection(_waiterList_).</ins>
+          1. <ins>Let _pending_ be whether _waiterList_.[[Waiters]] contains _waiterRecord_.</ins>
+          1. <ins>If _pending_ is *true*, perform RemoveWaiter(_waiterList_, _waiterRecord_).</ins>
+          1. <ins>Perform LeaveCriticalSection(_waiterList_).</ins>
+          1. <ins>If _pending_ is *true*, perform ! Call(_promiseCapability_.[[Reject]], *undefined*, « _signal_.[[AbortReason]] »).</ins>
+          1. <ins>Return ~unused~.</ins>
+        1. <ins>Let _entry_ be AddAbortAlgorithm(_signal_, _algorithm_).</ins>
+        1. <ins>Assert: _entry_ is an Abort Algorithm Registration Record.</ins>
+        1. <ins>Set _waiterRecord_.[[AbortRegistration]] to _entry_.</ins>
+      1. Perform AddWaiter(_waiterList_, _waiterRecord_).
+      1. If _mode_ is ~sync~, then
+        1. Perform SuspendThisAgent(_waiterList_, _waiterRecord_).
+      1. Else if _timeoutTime_ is finite, then
+        1. Perform EnqueueAtomicsWaitAsyncTimeoutJob(_waiterList_, _waiterRecord_).
+      1. Perform LeaveCriticalSection(_waiterList_).
+      1. If _mode_ is ~sync~, return _waiterRecord_.[[Result]].
+      1. Perform ! CreateDataPropertyOrThrow(_resultObj_, *"async"*, *true*).
+      1. Perform ! CreateDataPropertyOrThrow(_resultObj_, *"value"*, _promiseCapability_.[[Promise]]).
+      1. Return _resultObj_.
+    </emu-alg>
+    <emu-note>
+      <p><ins>Aborting, notifying, and timing out compete to remove the same waiter from its waiter list. For example, if another agent has already removed the waiter in `Atomics.notify`, aborting the signal leaves the queued resolution with *"ok"* in effect. If the abort algorithm removes the waiter first, a subsequent notification does not count it.</ins></p>
+      <p>_additionalTimeout_ allows implementations to pad timeouts as necessary, such as for reducing power consumption or coarsening timer resolution to mitigate timing attacks. This value may differ from call to call of DoWait.</p>
+    </emu-note>
+  </emu-clause>
+
+  <emu-clause id="sec-atomics.wait" type="built-in function">
+    <h1>Atomics.wait ( _ta_, _index_, _value_, _timeout_ )</h1>
+    <p>This function puts the surrounding agent in a wait queue and suspends it until notified or until the wait times out, returning a String differentiating those cases.</p>
+    <p><ins>An omitted or *undefined* _timeout_ specifies an unbounded wait. Otherwise, _timeout_ must be a Number. Passing *NaN* throws a *RangeError*.</ins></p>
+    <p>It performs the following steps when called:</p>
+    <emu-alg>
+      1. Return ? DoWait(~sync~, _ta_, _index_, _value_, _timeout_).
+    </emu-alg>
+  </emu-clause>
+
+  <emu-clause id="sec-atomics.waitasync" type="built-in function">
+    <h1>Atomics.waitAsync ( _ta_, _index_, _value_, _timeout_ )</h1>
+    <p>This function returns an Object with `async` and `value` properties. If `async` is *true*, `value` is a Promise that is fulfilled with either *"ok"* when the calling agent is notified or with *"timed-out"* when the timeout is reached. Otherwise, `async` is *false* and `value` is either *"not-equal"* or *"timed-out"*.</p>
+    <p><ins>The fourth argument may be *undefined*, a Number (in milliseconds), or an Object with optional *"timeout"* and *"signal"* properties. Each option may be omitted or *undefined*; otherwise, *"timeout"* must be a Number and *"signal"* must be an AbortSignal. Passing *NaN* as the fourth argument or as the *"timeout"* option throws a *RangeError*. If the signal is already aborted, this function throws its abort reason. If the signal aborts while the waiter is pending, the returned Promise is rejected with the signal's abort reason.</ins></p>
+    <p>It performs the following steps when called:</p>
+    <emu-alg>
+      1. Return ? DoWait(~async~, _ta_, _index_, _value_, _timeout_).
+    </emu-alg>
+  </emu-clause>
+</emu-clause>
