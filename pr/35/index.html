@@ -1,0 +1,722 @@
+<!doctype html>
+<head><meta content="width=device-width,initial-scale=1" name="viewport"><meta charset="utf-8"><meta content="https://tc39.es/ecmarkup/ecma-logo.png" property="og:image"><meta content="Cancellation" property="og:title"><meta content="Introduction
+  This proposal brings a subset of WHATWG DOM's AbortController and AbortSignal into ECMAScript, so that ECMAScript (and other specifications) can use them without depending on the rest of the web platform (in particular `EventTarget` and `DOMException`).
+  For hosts which already pr" property="og:description">
+<title>Cancellation</title><script defer="" src="js/ecmarkup.js?cache=aLX6RrCg"></script><link href="css/ecmarkup.css" rel="stylesheet"><link href="css/print.css" rel="stylesheet" media="print"><style>@media print{@page :left{@bottom-right{content:'© Ecma International 2026'}}@page :right{@bottom-left{content:'© Ecma International 2026'}}@page :first{@bottom-left{content:''}@bottom-right{content:''}}@page :blank{@bottom-left{content:''}@bottom-right{content:''}}}</style><style>@import url(https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/base16/solarized-light.min.css);@import url(https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.0.1/styles/a11y-dark.min.css) (prefers-color-scheme: dark);</style><style>
+  details.annoying-warning {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    border: 2px solid white;
+    background-color: #920800;
+    background-image: linear-gradient(transparent 40%, rgba(255, 255, 255, 0.2));
+    color: white;
+    opacity: .95;
+  }
+
+  details.annoying-warning[open] {
+    top: 40%;
+    translate: 0 calc(-1 * min(50%, 40vh));
+    left: 5%;
+    right: 5%;
+    margin: 0 auto;
+    max-width: 800px;
+    outline: solid 10000px rgba(255, 255, 255, 0.6);
+    border-radius: 3px;
+    border-width: 1px;
+    box-shadow: 0 0 0.5em rgba(0, 0, 0, 0.5);
+  }
+
+  details.annoying-warning > summary {
+    padding: 0.5ex 1ex;
+    font-size: 0.875em;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.85);
+    cursor: default;
+  }
+
+  details.annoying-warning > p {
+    line-height: 1.4;
+    margin: 1em;
+    text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.85);
+  }
+
+  details.annoying-warning a {
+    color: inherit;
+    text-decoration: underline;
+  }
+</style>
+
+</head><body><details class="annoying-warning">
+  <summary>PR #35</summary>
+  <p>
+    This document is a preview of merging <a href="https://github.com/tc39/proposal-cancellation/pull/35">PR #35</a> as commit <a href="https://github.com/tc39/proposal-cancellation/commit/e479d408bd5c0465ed6f8515682bb7d60fa2e089"><code>e479d408bd5c0465ed6f8515682bb7d60fa2e089</code></a>.
+  </p>
+  <p>
+    Do not reference it as authoritative in any way.
+    Instead, see the living specification at <a href="https://github.com/tc39/proposal-cancellation">https://github.com/tc39/proposal-cancellation</a>.
+  </p>
+</details>
+<script>
+  {
+    const dismissWarnings = evt => {
+      if (evt.code !== 'Escape') return;
+      for (const el of document.querySelectorAll('details.annoying-warning[open]')) {
+        el.open = false;
+      }
+    };
+    document.addEventListener('keydown', dismissWarnings, { passive: true });
+  }
+</script>
+<div id=shortcuts-help>
+<ul>
+  <li><span>Toggle shortcuts help</span><code>?</code></li>
+  <li><span>Toggle "can call user code" annotations</span><code>u</code></li>
+  <li><span>Toggle early exit annotations</span><code>e</code></li>
+
+  <li><span>Jump to search box</span><code>/</code></li>
+  <li><span>Toggle pinning of the current clause</span><code>p</code></li>
+  <li><span>Jump to the <i>n</i><sup>th</sup> pin</span><code>1-9</code></li>
+  <li><span>Jump to the 10<sup>th</sup> pin</span><code>0</code></li>
+  <li><span>Jump to the most recent link target</span><code>`</code></li>
+</ul>
+<fieldset>
+  <legend>Multipage preference</legend>
+  <button data-set-multipage-preference="" disabled type=button>No preference</button>
+  <button data-set-multipage-preference=single-page disabled type=button>Always single-page</button>
+  <button data-set-multipage-preference=multi-page disabled type=button>Always multi-page</button>
+</fieldset></div><div id=menu-toggle><svg height=54 style=width:100%;height:100%;stroke:currentColor viewBox="0 0 120 120" width=54 xmlns=http://www.w3.org/2000/svg>
+      <title>Menu</title>
+      <path d="M30,60 h60  M30,30 m0,5 h60  M30,90 m0,-5 h60" stroke-linecap=round stroke-width=10></path>
+    </svg></div><div class=menu-spacer id=menu-spacer></div><div id=menu><div id=menu-search><input id=menu-search-box placeholder=Search...><div class=inactive id=menu-search-results></div></div><div id=menu-pins><div class=menu-pane-header>Pins<button class=unpin-all>clear</button></div><ul id=menu-pins-list></ul></div><div class=menu-pane-header>Table of Contents</div><div id=menu-toc><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-intro title=Introduction>Introduction</a></li><li><span class=item-toggle-none></span><a href=#sec-well-known-intrinsic-objects title="Well-Known Intrinsic Objects"><span class=secnum>1</span> Well-Known Intrinsic Objects</a></li><li><span class=item-toggle>+</span><a href=#sec-constructor-properties-of-the-global-object title="Constructor Properties of the Global Object"><span class=secnum>2</span> Constructor Properties of the Global Object</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-constructor-properties-of-the-global-object-abortcontroller title="AbortController ( . . . )"><span class=secnum>2.1</span> <ins>AbortController ( . . . )</ins></a></li><li><span class=item-toggle-none></span><a href=#sec-constructor-properties-of-the-global-object-abortsignal title="AbortSignal ( . . . )"><span class=secnum>2.2</span> <ins>AbortSignal ( . . . )</ins></a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-cancellation title=Cancellation><span class=secnum>3</span> Cancellation</a><ol class=toc><li><span class=item-toggle>+</span><a href=#sec-abortsignal-abstract-operations title="Abstract Operations for AbortSignal Objects"><span class=secnum>3.1</span> Abstract Operations for AbortSignal Objects</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-createabortsignal title="CreateAbortSignal ( realm [ , proto [ , additionalInternalSlotsList ] ] )"><span class=secnum>3.1.1</span> CreateAbortSignal ( <var>realm</var> [ , <var>proto</var> [ , <var>additionalInternalSlotsList</var> ] ] )</a></li><li><span class=item-toggle-none></span><a href=#sec-isaborted title="IsAborted ( signal )"><span class=secnum>3.1.2</span> IsAborted ( <var>signal</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-abort-algorithm-registration-records title="Abort Algorithm Registration Records"><span class=secnum>3.1.3</span> Abort Algorithm Registration Records</a></li><li><span class=item-toggle-none></span><a href=#sec-addabortalgorithm title="AddAbortAlgorithm ( signal, algorithm )"><span class=secnum>3.1.4</span> AddAbortAlgorithm ( <var>signal</var>, <var>algorithm</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-removeabortalgorithm title="RemoveAbortAlgorithm ( entry )"><span class=secnum>3.1.5</span> RemoveAbortAlgorithm ( <var>entry</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-signalabort title="SignalAbort ( signal, reason )"><span class=secnum>3.1.6</span> SignalAbort ( <var>signal</var>, <var>reason</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-runabortsteps title="RunAbortSteps ( signal )"><span class=secnum>3.1.7</span> RunAbortSteps ( <var>signal</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-createdependentabortsignal title="CreateDependentAbortSignal ( signals, realm [ , proto [ , additionalInternalSlotsList ] ] )"><span class=secnum>3.1.8</span> CreateDependentAbortSignal ( <var>signals</var>, <var>realm</var> [ , <var>proto</var> [ , <var>additionalInternalSlotsList</var> ] ] )</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-abortsignal-host-integration title="Host Integration"><span class=secnum>3.2</span> Host Integration</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-hostcreateabortcallbackalgorithm title="HostCreateAbortCallbackAlgorithm ( callback )"><span class=secnum>3.2.1</span> HostCreateAbortCallbackAlgorithm ( <var>callback</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-hostcreateaborterror title="HostCreateAbortError ( )"><span class=secnum>3.2.2</span> HostCreateAbortError ( )</a></li><li><span class=item-toggle-none></span><a href=#sec-hostinitializeabortcontroller title="HostInitializeAbortController ( controller )"><span class=secnum>3.2.3</span> HostInitializeAbortController ( <var>controller</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-hostinitializeabortsignal title="HostInitializeAbortSignal ( signal, realm )"><span class=secnum>3.2.4</span> HostInitializeAbortSignal ( <var>signal</var>, <var>realm</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-hostabortsignalaborted title="HostAbortSignalAborted ( signal )"><span class=secnum>3.2.5</span> HostAbortSignalAborted ( <var>signal</var> )</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-abortcontroller-objects title="AbortController Objects"><span class=secnum>3.3</span> AbortController Objects</a><ol class=toc><li><span class=item-toggle>+</span><a href=#sec-abortcontroller-constructor title="The AbortController Constructor"><span class=secnum>3.3.1</span> The AbortController Constructor</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-abortcontroller title="AbortController ( )"><span class=secnum>3.3.1.1</span> AbortController ( )</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-properties-of-the-abortcontroller-constructor title="Properties of the AbortController Constructor"><span class=secnum>3.3.2</span> Properties of the AbortController Constructor</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-abortcontroller.prototype title=AbortController.prototype><span class=secnum>3.3.2.1</span> AbortController.prototype</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-properties-of-the-abortcontroller-prototype-object title="Properties of the AbortController Prototype Object"><span class=secnum>3.3.3</span> Properties of the AbortController Prototype Object</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-abortcontroller.prototype.abort title="AbortController.prototype.abort ( [ reason ] )"><span class=secnum>3.3.3.1</span> AbortController.prototype.abort ( [ <var>reason</var> ] )</a></li><li><span class=item-toggle-none></span><a href=#sec-abortcontroller.prototype.constructor title=AbortController.prototype.constructor><span class=secnum>3.3.3.2</span> AbortController.prototype.constructor</a></li><li><span class=item-toggle-none></span><a href=#sec-get-abortcontroller.prototype.signal title="get AbortController.prototype.signal"><span class=secnum>3.3.3.3</span> get AbortController.prototype.signal</a></li><li><span class=item-toggle-none></span><a href=#sec-abortcontroller.prototype-%symbol.tostringtag% title="AbortController.prototype [ %Symbol.toStringTag% ]"><span class=secnum>3.3.3.4</span> AbortController.prototype [ %Symbol.toStringTag% ]</a></li></ol></li><li><span class=item-toggle-none></span><a href=#sec-properties-of-abortcontroller-instances title="Properties of AbortController Instances"><span class=secnum>3.3.4</span> Properties of AbortController Instances</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-abortsignal-objects title="AbortSignal Objects"><span class=secnum>3.4</span> AbortSignal Objects</a><ol class=toc><li><span class=item-toggle>+</span><a href=#sec-abortsignal-constructor title="The AbortSignal Constructor"><span class=secnum>3.4.1</span> The AbortSignal Constructor</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-abortsignal title="AbortSignal ( )"><span class=secnum>3.4.1.1</span> AbortSignal ( )</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-properties-of-the-abortsignal-constructor title="Properties of the AbortSignal Constructor"><span class=secnum>3.4.2</span> Properties of the AbortSignal Constructor</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-abortsignal.abort title="AbortSignal.abort ( [ reason ] )"><span class=secnum>3.4.2.1</span> AbortSignal.abort ( [ <var>reason</var> ] )</a></li><li><span class=item-toggle-none></span><a href=#sec-abortsignal.any title="AbortSignal.any ( signals )"><span class=secnum>3.4.2.2</span> AbortSignal.any ( <var>signals</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-abortsignal.prototype title=AbortSignal.prototype><span class=secnum>3.4.2.3</span> AbortSignal.prototype</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-properties-of-the-abortsignal-prototype-object title="Properties of the AbortSignal Prototype Object"><span class=secnum>3.4.3</span> Properties of the AbortSignal Prototype Object</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-abortsignal.prototype.addabortcallback title="AbortSignal.prototype.addAbortCallback ( callback )"><span class=secnum>3.4.3.1</span> AbortSignal.prototype.addAbortCallback ( <var>callback</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-get-abortsignal.prototype.aborted title="get AbortSignal.prototype.aborted"><span class=secnum>3.4.3.2</span> get AbortSignal.prototype.aborted</a></li><li><span class=item-toggle-none></span><a href=#sec-abortsignal.prototype.constructor title=AbortSignal.prototype.constructor><span class=secnum>3.4.3.3</span> AbortSignal.prototype.constructor</a></li><li><span class=item-toggle-none></span><a href=#sec-get-abortsignal.prototype.reason title="get AbortSignal.prototype.reason"><span class=secnum>3.4.3.4</span> get AbortSignal.prototype.reason</a></li><li><span class=item-toggle-none></span><a href=#sec-abortsignal.prototype.throwifaborted title="AbortSignal.prototype.throwIfAborted ( )"><span class=secnum>3.4.3.5</span> AbortSignal.prototype.throwIfAborted ( )</a></li><li><span class=item-toggle-none></span><a href=#sec-abortsignal.prototype-%symbol.tostringtag% title="AbortSignal.prototype [ %Symbol.toStringTag% ]"><span class=secnum>3.4.3.6</span> AbortSignal.prototype [ %Symbol.toStringTag% ]</a></li></ol></li><li><span class=item-toggle-none></span><a href=#sec-properties-of-abortsignal-instances title="Properties of AbortSignal Instances"><span class=secnum>3.4.4</span> Properties of AbortSignal Instances</a></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-abortcallbackregistration-objects title="Abort Callback Registration Objects"><span class=secnum>3.5</span> Abort Callback Registration Objects</a><ol class=toc><li><span class=item-toggle>+</span><a href=#sec-%abortcallbackregistrationprototype%-object title="The %AbortCallbackRegistrationPrototype% Object"><span class=secnum>3.5.1</span> The %AbortCallbackRegistrationPrototype% Object</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-%abortcallbackregistrationprototype%.remove title="%AbortCallbackRegistrationPrototype%.remove ( )"><span class=secnum>3.5.1.1</span> %AbortCallbackRegistrationPrototype%.remove ( )</a></li><li><span class=item-toggle-none></span><a href=#sec-%abortcallbackregistrationprototype%-%symbol.dispose% title="%AbortCallbackRegistrationPrototype% [ %Symbol.dispose% ] ( )"><span class=secnum>3.5.1.2</span> %AbortCallbackRegistrationPrototype% [ %Symbol.dispose% ] ( )</a></li><li><span class=item-toggle-none></span><a href=#sec-%abortcallbackregistrationprototype%-%symbol.tostringtag% title="%AbortCallbackRegistrationPrototype% [ %Symbol.toStringTag% ]"><span class=secnum>3.5.1.3</span> %AbortCallbackRegistrationPrototype% [ %Symbol.toStringTag% ]</a></li></ol></li><li><span class=item-toggle-none></span><a href=#sec-properties-of-abortcallbackregistration-instances title="Properties of Abort Callback Registration Instances"><span class=secnum>3.5.2</span> Properties of Abort Callback Registration Instances</a></li></ol></li></ol></li><li><span class=item-toggle>+</span><a href=#sec-atomics title=Atomics><span class=secnum>4</span> Atomics</a><ol class=toc><li><span class=item-toggle-none></span><a href=#sec-waiter-record title="Waiter Record"><span class=secnum>4.1</span> Waiter Record</a></li><li><span class=item-toggle-none></span><a href=#sec-notifywaiter title="NotifyWaiter ( waiterList, waiterRecord )"><span class=secnum>4.2</span> NotifyWaiter ( <var>waiterList</var>, <var>waiterRecord</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-enqueueresolveinagentjob title="EnqueueResolveInAgentJob ( agentSignifier, promiseCapability, resolution, waiterRecord )"><span class=secnum>4.3</span> EnqueueResolveInAgentJob ( <del><var>agentSignifier</var></del>, <del><var>promiseCapability</var></del>, <del><var>resolution</var></del>, <ins><var>waiterRecord</var></ins> )</a></li><li><span class=item-toggle-none></span><a href=#sec-resolveasyncwaiter title="ResolveAsyncWaiter ( waiterRecord )"><span class=secnum>4.4</span> <ins>ResolveAsyncWaiter ( <var>waiterRecord</var> )</ins></a></li><li><span class=item-toggle-none></span><a href=#sec-dowait title="DoWait ( mode, ta, index, value, timeout )"><span class=secnum>4.5</span> DoWait ( <var>mode</var>, <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-atomics.wait title="Atomics.wait ( ta, index, value, timeout )"><span class=secnum>4.6</span> Atomics.wait ( <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var> )</a></li><li><span class=item-toggle-none></span><a href=#sec-atomics.waitasync title="Atomics.waitAsync ( ta, index, value, timeout )"><span class=secnum>4.7</span> Atomics.waitAsync ( <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var> )</a></li></ol></li><li><span class=item-toggle-none></span><a href=#sec-copyright-and-software-license title="Copyright & Software License">Copyright & Software License</a></li></ol></div></div><div id=spec-container><h1 class=version>Stage 1 Draft / November 20, 2026</h1><h1 class=title>Cancellation</h1>
+
+<emu-intro id=sec-intro>
+  <h1>Introduction</h1>
+  <p>This proposal brings a subset of WHATWG DOM's <a href=https://dom.spec.whatwg.org/#aborting-ongoing-activities>AbortController and AbortSignal</a> into ECMAScript, so that ECMAScript (and other specifications) can use them without depending on the rest of the web platform (in particular <code>EventTarget</code> and <code>DOMException</code>).</p>
+  <p>For <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>hosts</a></emu-xref> which already provide <emu-xref href=#sec-abortcontroller-constructor id=_ref_18><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> and <emu-xref href=#sec-abortsignal-constructor id=_ref_19><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>, this proposal preserves their existing API, with the <emu-xref href=#sec-iterator-interface><a href=https://tc39.es/ecma262/#sec-iterator-interface>iterator</a></emu-xref>-closing change described below. It also adds <code>AbortSignal.prototype.addAbortCallback</code> (see <a href=https://github.com/whatwg/dom/pull/1425>whatwg/dom#1425</a>). Web-platform-specific behaviour is provided through <emu-xref href=#host-hook><a href=https://tc39.es/ecma262/#host-hook>host hooks</a></emu-xref>:</p>
+  <ul>
+    <li><emu-xref id=_ref_20 aoid=HostCreateAbortError><a href=#sec-hostcreateaborterror>HostCreateAbortError</a></emu-xref>, which creates the default abort reason (on the web, a <code>DOMException</code> whose <code>name</code> is <emu-val>"AbortError"</emu-val>).</li>
+    <li><emu-xref id=_ref_21 aoid=HostInitializeAbortController><a href=#sec-hostinitializeabortcontroller>HostInitializeAbortController</a></emu-xref>, which initializes <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> state on every new <emu-xref href=#sec-abortcontroller-constructor id=_ref_22><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref>.</li>
+    <li><emu-xref id=_ref_23 aoid=HostInitializeAbortSignal><a href=#sec-hostinitializeabortsignal>HostInitializeAbortSignal</a></emu-xref>, which initializes <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> state on every new <emu-xref href=#sec-abortsignal-constructor id=_ref_24><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>, including its event listener list on the web.</li>
+    <li><emu-xref id=_ref_25 aoid=HostCreateAbortCallbackAlgorithm><a href=#sec-hostcreateabortcallbackalgorithm>HostCreateAbortCallbackAlgorithm</a></emu-xref>, which captures the callback context at registration and supplies the steps for synchronous invocation and exception reporting.</li>
+    <li><emu-xref id=_ref_26 aoid=HostAbortSignalAborted><a href=#sec-hostabortsignalaborted>HostAbortSignalAborted</a></emu-xref>, which is called after a signal's abort algorithms have run (on the web, this fires the <code>abort</code> event).</li>
+  </ul>
+  <p><emu-xref href=#host><a href=https://tc39.es/ecma262/#host>Hosts</a></emu-xref> may also change the <var class=field>[[Prototype]]</var> of <emu-xref href=#sec-abortsignal-constructor id=_ref_27><a href=#sec-abortsignal-constructor>%AbortSignal%</a></emu-xref> and <emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_28><a href=#sec-properties-of-the-abortsignal-prototype-object>%AbortSignal.prototype%</a></emu-xref> (on the web, to %EventTarget% and %EventTarget.prototype%) and add properties to them, such as <code>onabort</code> and <code>AbortSignal.timeout</code>. See <emu-xref href=#sec-abortsignal-host-integration id=_ref_0><a href=#sec-abortsignal-host-integration>3.2</a></emu-xref>.</p>
+  <p><code>Atomics.waitAsync</code> now accepts an options object with optional <code>timeout</code> and <code>signal</code> properties, allowing an asynchronous wait to be aborted. In addition, <code>Atomics.wait</code> and <code>Atomics.waitAsync</code> now throw a <emu-val>TypeError</emu-val> for timeout values that previously underwent numeric coercion, such as <emu-val>"100"</emu-val>, and a <emu-val>RangeError</emu-val> for <emu-val>NaN</emu-val>.</p>
+  <p>See <a href=https://github.com/tc39/proposal-cancellation>the proposal repository</a> for background material and discussion.</p>
+
+  <emu-note type=editor><span class=note>Editor's Note</span><div class=note-contents>
+    <p>Open questions and known deviations from the DOM specification:</p>
+    <ul>
+      <li><code>addAbortCallback</code> returns a disposable registration object whose <code>remove</code> and <code>[Symbol.dispose]</code> properties initially refer to the same method for unregistering the callback. In whatwg/dom#1425, <code>addAbortCallback</code> currently returns <emu-val>undefined</emu-val>.</li>
+      <li>When the signal is already aborted, <code>addAbortCallback</code> calls the callback and then throws the signal's abort reason. In whatwg/dom#1425, it calls the callback and returns normally.</li>
+      <li>The DOM specification iterates over a signal's abort algorithms and then empties the set. Here, the algorithms are removed one at a time as they run, so when an abort callback disposes the registration of a callback which has not yet run, that second callback does not run. The DOM specification does not clearly specify what happens in this case.</li>
+      <li>Unlike other built-ins in this specification, methods and accessors on these objects are enumerable to match the Web IDL conventions which existing implementations follow.</li>
+      <li><code>AbortSignal.any</code> closes its argument's <emu-xref href=#sec-iterator-interface><a href=https://tc39.es/ecma262/#sec-iterator-interface>iterator</a></emu-xref> when it encounters a non-<emu-xref href=#sec-abortsignal-constructor id=_ref_29><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> element, following ECMAScript convention. Web IDL's sequence conversion does not close the <emu-xref href=#sec-iterator-interface><a href=https://tc39.es/ecma262/#sec-iterator-interface>iterator</a></emu-xref>.</li>
+      <li>DOM can retain its <a href=https://dom.spec.whatwg.org/#abort-signal-garbage-collection>garbage collection rule for dependent signals</a> and its <a href=https://dom.spec.whatwg.org/#dom-abortsignal-timeout>requirement to retain a timeout signal while it has an <code>abort</code> event listener</a> when it adopts these operations. Both rules are consistent with this specification, but neither is needed for aborts to be delivered correctly: when a timeout expires, its signal must be aborted whenever that would be observable, including through abort callbacks or dependent signals.</li>
+    </ul>
+  </div></emu-note>
+</emu-intro>
+
+<emu-clause id=sec-well-known-intrinsic-objects>
+  <h1><span class=secnum>1</span> Well-Known Intrinsic Objects</h1>
+  <emu-note type=editor><span class=note>Editor's Note</span><div class=note-contents>Only the added rows of <emu-xref href=#table-well-known-intrinsic-objects id=_ref_1><a href=#table-well-known-intrinsic-objects>Table 1</a></emu-xref> are shown.</div></emu-note>
+  <emu-table caption="Well-Known Intrinsic Objects" id=table-well-known-intrinsic-objects oldids=table-7><figure><figcaption>Table 1: Well-Known Intrinsic Objects</figcaption><span id=table-7></span>
+    <table>
+      <thead>
+        <tr>
+          <th>Intrinsic Name</th>
+          <th>Global Name</th>
+          <th>ECMAScript Language Association</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+        <td><ins><emu-xref href=#sec-%abortcallbackregistrationprototype%-object id=_ref_30><a href=#sec-%abortcallbackregistrationprototype%-object>%AbortCallbackRegistrationPrototype%</a></emu-xref></ins></td>
+        <td></td>
+        <td><ins>The prototype of <emu-xref href=#sec-abortcallbackregistration-objects id=_ref_31><a href=#sec-abortcallbackregistration-objects>abort callback registration</a></emu-xref> objects (<emu-xref href=#sec-%abortcallbackregistrationprototype%-object id=_ref_2><a href=#sec-%abortcallbackregistrationprototype%-object>3.5.1</a></emu-xref>)</ins></td>
+      </tr>
+      <tr>
+        <td><ins><emu-xref href=#sec-abortcontroller-constructor id=_ref_32><a href=#sec-abortcontroller-constructor>%AbortController%</a></emu-xref></ins></td>
+        <td><ins><emu-val>"AbortController"</emu-val></ins></td>
+        <td><ins>The <code>AbortController</code> <emu-not-ref>constructor</emu-not-ref> (<emu-xref href=#sec-abortcontroller-constructor id=_ref_3><a href=#sec-abortcontroller-constructor>3.3.1</a></emu-xref>)</ins></td>
+      </tr>
+      <tr>
+        <td><ins><emu-xref href=#sec-abortsignal-constructor id=_ref_33><a href=#sec-abortsignal-constructor>%AbortSignal%</a></emu-xref></ins></td>
+        <td><ins><emu-val>"AbortSignal"</emu-val></ins></td>
+        <td><ins>The <code>AbortSignal</code> <emu-not-ref>constructor</emu-not-ref> (<emu-xref href=#sec-abortsignal-constructor id=_ref_4><a href=#sec-abortsignal-constructor>3.4.1</a></emu-xref>)</ins></td>
+      </tr>
+    </tbody></table>
+  </figure></emu-table>
+</emu-clause>
+
+<emu-clause id=sec-constructor-properties-of-the-global-object>
+  <h1><span class=secnum>2</span> Constructor Properties of the Global Object</h1>
+  <emu-note type=editor><span class=note>Editor's Note</span><div class=note-contents>Only the added subclauses are shown.</div></emu-note>
+
+  <emu-clause id=sec-constructor-properties-of-the-global-object-abortcontroller>
+    <h1><span class=secnum>2.1</span> <ins>AbortController ( . . . )</ins></h1>
+    <p><ins>See <emu-xref href=#sec-abortcontroller-constructor id=_ref_5><a href=#sec-abortcontroller-constructor>3.3.1</a></emu-xref>.</ins></p>
+  </emu-clause>
+
+  <emu-clause id=sec-constructor-properties-of-the-global-object-abortsignal>
+    <h1><span class=secnum>2.2</span> <ins>AbortSignal ( . . . )</ins></h1>
+    <p><ins>See <emu-xref href=#sec-abortsignal-constructor id=_ref_6><a href=#sec-abortsignal-constructor>3.4.1</a></emu-xref>.</ins></p>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id=sec-cancellation>
+  <h1><span class=secnum>3</span> Cancellation</h1>
+  <emu-note type=editor><span class=note>Editor's Note</span><div class=note-contents>This clause is added as a new subclause of <emu-xref href=#sec-control-abstraction-objects><a href=https://tc39.es/ecma262/#sec-control-abstraction-objects>27</a></emu-xref>.</div></emu-note>
+
+  <p>An <emu-xref href=#sec-abortcontroller-constructor id=_ref_34><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> and its associated <emu-xref href=#sec-abortsignal-constructor id=_ref_35><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> are used to request that one or more ongoing operations be cancelled. The code which starts an operation passes the <emu-xref href=#sec-abortsignal-constructor id=_ref_36><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> to it. The <emu-xref href=#sec-abortcontroller-constructor id=_ref_37><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> can later be used to <em>abort</em> the signal, and code observing the signal can then stop its work.</p>
+
+  <emu-note><span class=note>Note 1</span><div class=note-contents>
+    <p>As with any other object, an implementation may reclaim the memory used by an <emu-xref href=#sec-abortsignal-constructor id=_ref_38><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>, its abort algorithms, or its links to other signals whenever doing so has no observable effect.</p>
+    <p><strong>If a signal can still be aborted, the implementation must preserve every observable effect of that abort.</strong> Even if user code has dropped its last reference to the signal, a later abort must still run its registered abort algorithms and, on the web, dispatch its <code>abort</code> event. For example:</p>
+    <ul>
+      <li>Once an <emu-xref href=#sec-abortcontroller-constructor id=_ref_39><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> is unreachable, nothing can abort its signal. So the signal's abort algorithms can be discarded, and so can the signal once no code can reach it.</li>
+      <li>Suppose <code>AbortSignal.any([longLived, perRequest])</code> is called once per request. Each resulting <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_40><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> which no code can reach and which has no abort algorithms or event listeners can be discarded, along with its entry in <code>longLived</code>.<var class=field>[[DependentSignals]]</var>, even while <code>longLived</code> is still in use. Otherwise a long-lived signal would accumulate every <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_41><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> ever created from it.</li>
+      <li>If such a <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_42><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> has a callback registered with <code>addAbortCallback</code>, aborting one of its sources must still invoke that callback.</li>
+      <li>An entry in a <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_43><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref>'s <var class=field>[[SourceSignals]]</var> can be discarded once that source can no longer be aborted.</li>
+    </ul>
+    <p>The <a href=https://dom.spec.whatwg.org/#abort-signal-garbage-collection>DOM garbage collection rule</a> for dependent signals is one way to implement this.</p>
+  </div></emu-note>
+
+  <p>Unlike other built-in objects in this specification, every function-valued <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>data property</a></emu-xref> and every <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>accessor property</a></emu-xref> described in this clause has the attribute <var class=field>[[Enumerable]]</var>: <emu-val>true</emu-val>, except for properties whose key <emu-xref href=#sec-ecmascript-language-types-symbol-type><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type>is a Symbol</a></emu-xref> and properties named <emu-val>"constructor"</emu-val>.</p>
+  <emu-note><span class=note>Note 2</span><div class=note-contents>
+    <p>This matches the Web IDL conventions which existing implementations of these classes follow.</p>
+  </div></emu-note>
+
+  <emu-clause id=sec-abortsignal-abstract-operations>
+    <h1><span class=secnum>3.1</span> Abstract Operations for AbortSignal Objects</h1>
+
+    <emu-clause id=sec-createabortsignal type="abstract operation" aoid=CreateAbortSignal>
+      <h1><span class=secnum>3.1.1</span> CreateAbortSignal ( <var>realm</var> [ , <var>proto</var> [ , <var>additionalInternalSlotsList</var> ] ] )</h1>
+      <p>The abstract operation CreateAbortSignal takes argument <var>realm</var> (a <emu-xref href=#realm-record><a href=https://tc39.es/ecma262/#realm-record>Realm Record</a></emu-xref>) and optional arguments <var>proto</var> (an Object) and <var>additionalInternalSlotsList</var> (a <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of names of internal slots) and returns an <emu-xref href=#sec-abortsignal-constructor id=_ref_44><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>. It creates a new <emu-xref href=#sec-abortsignal-constructor id=_ref_45><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> which is not aborted. Other specifications may use <var>additionalInternalSlotsList</var> to create <emu-xref href=#sec-abortsignal-constructor id=_ref_46><a href=#sec-abortsignal-constructor>AbortSignals</a></emu-xref> with additional internal slots (see <emu-xref href=#sec-abortsignal-host-integration id=_ref_7><a href=#sec-abortsignal-host-integration>3.2</a></emu-xref>). This operation may be invoked by other specifications. It performs the following steps when called:</p>
+      <emu-alg><ol><li>If <var>proto</var> is not present, set <var>proto</var> to <var>realm</var>.<var class=field>[[Intrinsics]]</var>.[[<emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_47><a href=#sec-properties-of-the-abortsignal-prototype-object>%AbortSignal.prototype%</a></emu-xref>]].</li><li>If <var>additionalInternalSlotsList</var> is not present, set <var>additionalInternalSlotsList</var> to a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>Let <var>internalSlotsList</var> be « <var class=field>[[AbortReason]]</var>, <var class=field>[[AbortAlgorithms]]</var>, <var class=field>[[SourceSignals]]</var>, <var class=field>[[DependentSignals]]</var> ».</li><li>Append to <var>internalSlotsList</var> the internal slot names the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> specifies for all <emu-xref href=#sec-abortsignal-constructor id=_ref_48><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> instances.</li><li>Set <var>internalSlotsList</var> to the <emu-xref href=#list-concatenation><a href=https://tc39.es/ecma262/#list-concatenation>list-concatenation</a></emu-xref> of <var>internalSlotsList</var> and <var>additionalInternalSlotsList</var>.</li><li>Let <var>signal</var> be <emu-xref aoid=OrdinaryObjectCreate><a href=https://tc39.es/ecma262/#sec-ordinaryobjectcreate>OrdinaryObjectCreate</a></emu-xref>(<var>proto</var>, <var>internalSlotsList</var>).</li><li>Set <var>signal</var>.<var class=field>[[AbortReason]]</var> to <emu-val>undefined</emu-val>.</li><li>Set <var>signal</var>.<var class=field>[[AbortAlgorithms]]</var> to a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>Set <var>signal</var>.<var class=field>[[SourceSignals]]</var> to <emu-const>not-dependent</emu-const>.</li><li>Set <var>signal</var>.<var class=field>[[DependentSignals]]</var> to a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>Perform <emu-xref id=_ref_49 aoid=HostInitializeAbortSignal><a href=#sec-hostinitializeabortsignal>HostInitializeAbortSignal</a></emu-xref>(<var>signal</var>, <var>realm</var>).</li><li class=exit>Return <var>signal</var>.</li></ol></emu-alg>
+    </emu-clause>
+
+    <emu-clause id=sec-isaborted type="abstract operation" aoid=IsAborted>
+      <h1><span class=secnum>3.1.2</span> IsAborted ( <var>signal</var> )</h1>
+      <p>The abstract operation IsAborted takes argument <var>signal</var> (an <emu-xref href=#sec-abortsignal-constructor id=_ref_50><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>) and returns a Boolean. This operation may be invoked by other specifications. It performs the following steps when called:</p>
+      <emu-alg><ol><li class=exit>If <var>signal</var>.<var class=field>[[AbortReason]]</var> is <emu-val>undefined</emu-val>, return <emu-val>false</emu-val>.</li><li class=exit>Return <emu-val>true</emu-val>.</li></ol></emu-alg>
+    </emu-clause>
+
+    <emu-clause id=sec-abort-algorithm-registration-records>
+      <h1><span class=secnum>3.1.3</span> Abort Algorithm Registration Records</h1>
+      <p>An <dfn tabindex=-1 variants="Abort Algorithm Registration Records">Abort Algorithm Registration Record</dfn> represents a registration of an algorithm on an <emu-xref href=#sec-abortsignal-constructor id=_ref_51><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>.</p>
+      <p>Abort Algorithm Registration Records have the fields listed in <emu-xref href=#table-abort-algorithm-registration-record-fields id=_ref_8><a href=#table-abort-algorithm-registration-record-fields>Table 2</a></emu-xref>.</p>
+      <emu-table caption="Abort Algorithm Registration Record Fields" id=table-abort-algorithm-registration-record-fields><figure><figcaption>Table 2: <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_52><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref> Fields</figcaption>
+        <table>
+          <thead>
+            <tr>
+              <th>Field Name</th>
+              <th>Value</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody><tr>
+            <td><var class=field>[[Signal]]</var></td>
+            <td>an <emu-xref href=#sec-abortsignal-constructor id=_ref_53><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> or <emu-const>empty</emu-const></td>
+            <td>The signal on which the algorithm is registered, or <emu-const>empty</emu-const> once the registration has been removed.</td>
+          </tr>
+          <tr>
+            <td><var class=field>[[Algorithm]]</var></td>
+            <td>an <emu-xref href=#sec-abstract-closure><a href=https://tc39.es/ecma262/#sec-abstract-closure>Abstract Closure</a></emu-xref> with no parameters or <emu-const>empty</emu-const></td>
+            <td>The algorithm to perform when <var class=field>[[Signal]]</var> is aborted, or <emu-const>empty</emu-const> once the registration has been removed.</td>
+          </tr>
+        </tbody></table>
+      </figure></emu-table>
+    </emu-clause>
+
+    <emu-clause id=sec-addabortalgorithm type="abstract operation" aoid=AddAbortAlgorithm>
+      <h1><span class=secnum>3.1.4</span> AddAbortAlgorithm ( <var>signal</var>, <var>algorithm</var> )</h1>
+      <p>The abstract operation AddAbortAlgorithm takes arguments <var>signal</var> (an <emu-xref href=#sec-abortsignal-constructor id=_ref_54><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>) and <var>algorithm</var> (an <emu-xref href=#sec-abstract-closure><a href=https://tc39.es/ecma262/#sec-abstract-closure>Abstract Closure</a></emu-xref> with no parameters) and returns either an <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_55><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref> or <emu-const>already-aborted</emu-const>. It arranges for <var>algorithm</var> to be performed when <var>signal</var> is aborted. <var>algorithm</var> must complete normally. This operation may be invoked by other specifications. It performs the following steps when called:</p>
+      <emu-alg><ol><li class=exit>If <emu-xref id=_ref_56 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) is <emu-val>true</emu-val>, return <emu-const>already-aborted</emu-const>.</li><li>Let <var>entry</var> be the <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_57><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref> { <var class=field>[[Signal]]</var>: <var>signal</var>, <var class=field>[[Algorithm]]</var>: <var>algorithm</var> }.</li><li>Append <var>entry</var> to <var>signal</var>.<var class=field>[[AbortAlgorithms]]</var>.</li><li class=exit>Return <var>entry</var>.</li></ol></emu-alg>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>If <var>signal</var> is already aborted, <var>algorithm</var> is not registered and will never be performed. Callers usually need to handle that case, either by checking <emu-xref id=_ref_58 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) beforehand or by checking for <emu-const>already-aborted</emu-const>.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-removeabortalgorithm type="abstract operation" aoid=RemoveAbortAlgorithm>
+      <h1><span class=secnum>3.1.5</span> RemoveAbortAlgorithm ( <var>entry</var> )</h1>
+      <p>The abstract operation RemoveAbortAlgorithm takes argument <var>entry</var> (an <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_59><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref>) and returns <emu-const>unused</emu-const>. This operation may be invoked by other specifications. It performs the following steps when called:</p>
+      <emu-alg><ol><li>Let <var>signal</var> be <var>entry</var>.<var class=field>[[Signal]]</var>.</li><li class=exit>If <var>signal</var> is <emu-const>empty</emu-const>, return <emu-const>unused</emu-const>.</li><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <var>signal</var>.<var class=field>[[AbortAlgorithms]]</var> contains <var>entry</var>.</li><li>Remove <var>entry</var> from <var>signal</var>.<var class=field>[[AbortAlgorithms]]</var>.</li><li>Set <var>entry</var>.<var class=field>[[Signal]]</var> to <emu-const>empty</emu-const>.</li><li>Set <var>entry</var>.<var class=field>[[Algorithm]]</var> to <emu-const>empty</emu-const>.</li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></emu-alg>
+    </emu-clause>
+
+    <emu-clause id=sec-signalabort type="abstract operation" aoid=SignalAbort>
+      <h1><span class=secnum>3.1.6</span> SignalAbort ( <var>signal</var>, <var>reason</var> )</h1>
+      <p>The abstract operation SignalAbort takes arguments <var>signal</var> (an <emu-xref href=#sec-abortsignal-constructor id=_ref_60><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>) and <var>reason</var> (an <emu-xref href=#sec-ecmascript-language-types><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types>ECMAScript language value</a></emu-xref>) and returns <emu-const>unused</emu-const>. It aborts <var>signal</var> and any signals which depend on it. If <var>reason</var> is <emu-val>undefined</emu-val>, the abort reason is created by <emu-xref id=_ref_61 aoid=HostCreateAbortError><a href=#sec-hostcreateaborterror>HostCreateAbortError</a></emu-xref>. This operation may be invoked by other specifications, but only with a signal which is not a <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_62><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref>. It performs the following steps when called:</p>
+      <emu-alg><ol><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <var>signal</var>.<var class=field>[[SourceSignals]]</var> is <emu-const>not-dependent</emu-const>.</li><li class=exit>If <emu-xref id=_ref_63 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) is <emu-val>true</emu-val>, return <emu-const>unused</emu-const>.</li><li>If <var>reason</var> is <emu-val>undefined</emu-val>, set <var>reason</var> to <emu-xref id=_ref_64 aoid=HostCreateAbortError><a href=#sec-hostcreateaborterror>HostCreateAbortError</a></emu-xref>().</li><li>Set <var>signal</var>.<var class=field>[[AbortReason]]</var> to <var>reason</var>.</li><li>Let <var>dependentSignalsToAbort</var> be a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>For each element <var>dependentSignal</var> of <var>signal</var>.<var class=field>[[DependentSignals]]</var>, do<ol><li>If <emu-xref id=_ref_65 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>dependentSignal</var>) is <emu-val>false</emu-val>, then<ol><li>Set <var>dependentSignal</var>.<var class=field>[[AbortReason]]</var> to <var>reason</var>.</li><li>Append <var>dependentSignal</var> to <var>dependentSignalsToAbort</var>.</li></ol></li></ol></li><li>Perform <emu-xref id=_ref_66 aoid=RunAbortSteps><a href=#sec-runabortsteps>RunAbortSteps</a></emu-xref>(<var>signal</var>).</li><li>For each element <var>dependentSignal</var> of <var>dependentSignalsToAbort</var>, do<ol><li>Perform <emu-xref id=_ref_67 aoid=RunAbortSteps><a href=#sec-runabortsteps>RunAbortSteps</a></emu-xref>(<var>dependentSignal</var>).</li></ol></li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></emu-alg>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>A <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_68><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> is aborted only through its sources. Because <emu-xref id=_ref_69 aoid=CreateDependentAbortSignal><a href=#sec-createdependentabortsignal>CreateDependentAbortSignal</a></emu-xref> links new signals to the sources of a <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_70><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> rather than to the <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_71><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> itself, aborting a <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_72><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> directly would not abort the signals created from it.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-runabortsteps type="abstract operation" aoid=RunAbortSteps>
+      <h1><span class=secnum>3.1.7</span> RunAbortSteps ( <var>signal</var> )</h1>
+      <p>The abstract operation RunAbortSteps takes argument <var>signal</var> (an <emu-xref href=#sec-abortsignal-constructor id=_ref_73><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>) and returns <emu-const>unused</emu-const>. It performs the following steps when called:</p>
+      <emu-alg><ol><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <emu-xref id=_ref_74 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) is <emu-val>true</emu-val>.</li><li>Repeat, while <var>signal</var>.<var class=field>[[AbortAlgorithms]]</var> is not empty,<ol><li>Let <var>entry</var> be the first element of <var>signal</var>.<var class=field>[[AbortAlgorithms]]</var>.</li><li>Let <var>algorithm</var> be <var>entry</var>.<var class=field>[[Algorithm]]</var>.</li><li>Perform <emu-xref id=_ref_75 aoid=RemoveAbortAlgorithm><a href=#sec-removeabortalgorithm>RemoveAbortAlgorithm</a></emu-xref>(<var>entry</var>).</li><li>Perform <var>algorithm</var>().</li></ol></li><li>Perform <emu-xref id=_ref_76 aoid=HostAbortSignalAborted><a href=#sec-hostabortsignalaborted>HostAbortSignalAborted</a></emu-xref>(<var>signal</var>).</li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></emu-alg>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>By the time a source signal's first abort algorithm runs, every previously unaborted signal that depends on it already has the same abort reason.</p>
+        <p>Callbacks registered with <code>addAbortCallback</code> and abort algorithms added by <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> code or other specifications share a single list, so they run interleaved in the order in which they were registered.</p>
+        <p>Each algorithm is removed before it is performed, so an algorithm removed by an earlier one (for example, by disposing an <emu-xref href=#sec-abortcallbackregistration-objects id=_ref_77><a href=#sec-abortcallbackregistration-objects>abort callback registration</a></emu-xref>) is never performed. Disposing the same registration again has no effect.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-createdependentabortsignal type="abstract operation" aoid=CreateDependentAbortSignal>
+      <h1><span class=secnum>3.1.8</span> CreateDependentAbortSignal ( <var>signals</var>, <var>realm</var> [ , <var>proto</var> [ , <var>additionalInternalSlotsList</var> ] ] )</h1>
+      <p>The abstract operation CreateDependentAbortSignal takes arguments <var>signals</var> (a <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of <emu-xref href=#sec-abortsignal-constructor id=_ref_78><a href=#sec-abortsignal-constructor>AbortSignals</a></emu-xref>) and <var>realm</var> (a <emu-xref href=#realm-record><a href=https://tc39.es/ecma262/#realm-record>Realm Record</a></emu-xref>) and optional arguments <var>proto</var> (an Object) and <var>additionalInternalSlotsList</var> (a <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of names of internal slots) and returns an <emu-xref href=#sec-abortsignal-constructor id=_ref_79><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>. It returns a new <emu-xref href=#sec-abortsignal-constructor id=_ref_80><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> which is aborted when any element of <var>signals</var> is aborted. <var>proto</var> and <var>additionalInternalSlotsList</var> are as in <emu-xref id=_ref_81 aoid=CreateAbortSignal><a href=#sec-createabortsignal>CreateAbortSignal</a></emu-xref>; for example, the web platform uses them to create a <code>TaskSignal</code>. This operation may be invoked by other specifications. It performs the following steps when called:</p>
+      <emu-alg><ol><li>If <var>proto</var> is not present, set <var>proto</var> to <var>realm</var>.<var class=field>[[Intrinsics]]</var>.[[<emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_82><a href=#sec-properties-of-the-abortsignal-prototype-object>%AbortSignal.prototype%</a></emu-xref>]].</li><li>If <var>additionalInternalSlotsList</var> is not present, set <var>additionalInternalSlotsList</var> to a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>Let <var>resultSignal</var> be <emu-xref id=_ref_83 aoid=CreateAbortSignal><a href=#sec-createabortsignal>CreateAbortSignal</a></emu-xref>(<var>realm</var>, <var>proto</var>, <var>additionalInternalSlotsList</var>).</li><li>For each element <var>signal</var> of <var>signals</var>, do<ol><li>If <emu-xref id=_ref_84 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) is <emu-val>true</emu-val>, then<ol><li>Set <var>resultSignal</var>.<var class=field>[[AbortReason]]</var> to <var>signal</var>.<var class=field>[[AbortReason]]</var>.</li><li class=exit>Return <var>resultSignal</var>.</li></ol></li></ol></li><li>Set <var>resultSignal</var>.<var class=field>[[SourceSignals]]</var> to a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>For each element <var>signal</var> of <var>signals</var>, do<ol><li>If <var>signal</var>.<var class=field>[[SourceSignals]]</var> is <emu-const>not-dependent</emu-const>, let <var>sourceSignals</var> be « <var>signal</var> ».</li><li>Else, let <var>sourceSignals</var> be <var>signal</var>.<var class=field>[[SourceSignals]]</var>.</li><li>For each element <var>sourceSignal</var> of <var>sourceSignals</var>, do<ol><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <emu-xref id=_ref_85 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>sourceSignal</var>) is <emu-val>false</emu-val> and <var>sourceSignal</var>.<var class=field>[[SourceSignals]]</var> is <emu-const>not-dependent</emu-const>.</li><li>If <var>resultSignal</var>.<var class=field>[[SourceSignals]]</var> does not contain <var>sourceSignal</var>, then<ol><li>Append <var>sourceSignal</var> to <var>resultSignal</var>.<var class=field>[[SourceSignals]]</var>.</li><li>Append <var>resultSignal</var> to <var>sourceSignal</var>.<var class=field>[[DependentSignals]]</var>.</li></ol></li></ol></li></ol></li><li class=exit>Return <var>resultSignal</var>.</li></ol></emu-alg>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>A <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_86><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> is linked directly to the non-dependent signals it ultimately depends on, never to another <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_87><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref>, so the chain of signals traversed when aborting is never longer than one link.</p>
+        <p>For when an implementation can discard dependent signals and the links between signals, see the note in <emu-xref href=#sec-cancellation id=_ref_9><a href=#sec-cancellation>3</a></emu-xref>.</p>
+      </div></emu-note>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id=sec-abortsignal-host-integration>
+    <h1><span class=secnum>3.2</span> Host Integration</h1>
+
+    <p>The <var class=field>[[Prototype]]</var> internal slots of <emu-xref href=#sec-abortsignal-constructor id=_ref_88><a href=#sec-abortsignal-constructor>%AbortSignal%</a></emu-xref> and <emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_89><a href=#sec-properties-of-the-abortsignal-prototype-object>%AbortSignal.prototype%</a></emu-xref> are <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref>. If the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> does not define them, they are <emu-xref href=#sec-properties-of-the-function-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object>%Function.prototype%</a></emu-xref> and <emu-xref href=#sec-properties-of-the-object-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-object-prototype-object>%Object.prototype%</a></emu-xref>, respectively. A <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> which defines them must set them before any ECMAScript code is evaluated in the <emu-xref href=#realm><a href=https://tc39.es/ecma262/#realm>realm</a></emu-xref> (for example, in the <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> steps of <emu-xref aoid=InitializeHostDefinedRealm><a href=https://tc39.es/ecma262/#sec-initializehostdefinedrealm>InitializeHostDefinedRealm</a></emu-xref>). <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>Hosts</a></emu-xref> may also define additional properties on <emu-xref href=#sec-abortsignal-constructor id=_ref_90><a href=#sec-abortsignal-constructor>%AbortSignal%</a></emu-xref>, <emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_91><a href=#sec-properties-of-the-abortsignal-prototype-object>%AbortSignal.prototype%</a></emu-xref>, <emu-xref href=#sec-abortcontroller-constructor id=_ref_92><a href=#sec-abortcontroller-constructor>%AbortController%</a></emu-xref>, and <emu-xref href=#sec-properties-of-the-abortcontroller-prototype-object id=_ref_93><a href=#sec-properties-of-the-abortcontroller-prototype-object>%AbortController.prototype%</a></emu-xref>.</p>
+    <p>A <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> may specify additional internal slots for all <emu-xref href=#sec-abortcontroller-constructor id=_ref_94><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> instances and for all <emu-xref href=#sec-abortsignal-constructor id=_ref_95><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> instances. These slots, along with any passed to <emu-xref id=_ref_96 aoid=CreateAbortSignal><a href=#sec-createabortsignal>CreateAbortSignal</a></emu-xref> or <emu-xref id=_ref_97 aoid=CreateDependentAbortSignal><a href=#sec-createdependentabortsignal>CreateDependentAbortSignal</a></emu-xref> as <var>additionalInternalSlotsList</var>, are allocated when the object is created. The complete list of internal slot names used to create each object must contain no duplicates. The <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> initializes the slots it specifies for all instances in <emu-xref id=_ref_98 aoid=HostInitializeAbortController><a href=#sec-hostinitializeabortcontroller>HostInitializeAbortController</a></emu-xref> and <emu-xref id=_ref_99 aoid=HostInitializeAbortSignal><a href=#sec-hostinitializeabortsignal>HostInitializeAbortSignal</a></emu-xref>.</p>
+    <emu-note><span class=note>Note</span><div class=note-contents>
+      <p>On the web platform, <emu-xref href=#sec-abortsignal-constructor id=_ref_100><a href=#sec-abortsignal-constructor>%AbortSignal%</a></emu-xref> inherits from %EventTarget% and <emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_101><a href=#sec-properties-of-the-abortsignal-prototype-object>%AbortSignal.prototype%</a></emu-xref> inherits from %EventTarget.prototype%. The <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> also defines <code>AbortSignal.prototype.onabort</code> and <code>AbortSignal.timeout</code>.</p>
+    </div></emu-note>
+
+    <emu-clause id=sec-hostcreateabortcallbackalgorithm type="host-defined abstract operation" aoid=HostCreateAbortCallbackAlgorithm>
+      <h1><span class=secnum>3.2.1</span> HostCreateAbortCallbackAlgorithm ( <var>callback</var> )</h1>
+      <p>The <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> abstract operation HostCreateAbortCallbackAlgorithm takes argument <var>callback</var> (a <emu-xref href=#function-object><a href=https://tc39.es/ecma262/#function-object>function object</a></emu-xref>) and returns an <emu-xref href=#sec-abstract-closure><a href=https://tc39.es/ecma262/#sec-abstract-closure>Abstract Closure</a></emu-xref> with no parameters. It captures any <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> context needed to invoke <var>callback</var>.</p>
+      <p>An implementation of HostCreateAbortCallbackAlgorithm must not evaluate any ECMAScript code. Each time the returned closure is performed, it must synchronously call <var>callback</var> once with <emu-val>undefined</emu-val> as the <emu-val>this</emu-val> value and no arguments. The closure must return <emu-const>unused</emu-const>.</p>
+      <p>The default implementation of HostCreateAbortCallbackAlgorithm performs the following steps when called:</p>
+      <emu-alg><ol><li class=exit>Return a new <emu-xref href=#sec-abstract-closure><a href=https://tc39.es/ecma262/#sec-abstract-closure>Abstract Closure</a></emu-xref> with no parameters that captures <var>callback</var> and performs the following steps when called:<ol class=ac-body><li>Perform <emu-xref aoid=Completion><a href=https://tc39.es/ecma262/#sec-completion-ao>Completion</a></emu-xref>(<emu-xref aoid=Call><a href=https://tc39.es/ecma262/#sec-call>Call</a></emu-xref>(<var>callback</var>, <emu-val>undefined</emu-val>)).</li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></li></ol></emu-alg>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>On the web platform, the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> captures the Web IDL callback context at registration. The closure <a href=https://webidl.spec.whatwg.org/#invoke-a-callback-function>invokes the callback</a> with the "report" exception behaviour, which reports a thrown exception to the <emu-xref href=#sec-global-object><a href=https://tc39.es/ecma262/#sec-global-object>global object</a></emu-xref> of the callback's associated <emu-xref href=#realm><a href=https://tc39.es/ecma262/#realm>realm</a></emu-xref>.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-hostcreateaborterror type="host-defined abstract operation" aoid=HostCreateAbortError>
+      <h1><span class=secnum>3.2.2</span> HostCreateAbortError ( )</h1>
+      <p>The <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> abstract operation HostCreateAbortError takes no arguments and returns an Object. It creates the value used as the abort reason when a signal is aborted without an explicit reason.</p>
+      <p>An implementation of HostCreateAbortError must conform to the following requirements:</p>
+      <ul>
+        <li>It must return a new error object in the current <emu-xref href=#realm><a href=https://tc39.es/ecma262/#realm>realm</a></emu-xref> each time it is called.</li>
+        <li>The returned object must be initialized such that, with its prototype chain in its initial state, reading its <emu-val>"name"</emu-val> property would return <emu-val>"AbortError"</emu-val>.</li>
+        <li>It must not evaluate any ECMAScript code.</li>
+      </ul>
+      <p>The default implementation of HostCreateAbortError performs the following steps when called:</p>
+      <emu-alg><ol><li>Let <var>error</var> be <emu-xref aoid=OrdinaryObjectCreate><a href=https://tc39.es/ecma262/#sec-ordinaryobjectcreate>OrdinaryObjectCreate</a></emu-xref>(<emu-xref href=#sec-properties-of-the-error-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-error-prototype-object>%Error.prototype%</a></emu-xref>, « <var class=field>[[ErrorData]]</var> »).</li><li>Let <var>message</var> be an <emu-xref href=#implementation-defined><a href=https://tc39.es/ecma262/#implementation-defined>implementation-defined</a></emu-xref> String.</li><li>Perform <emu-xref aoid=CreateNonEnumerableDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createnonenumerabledatapropertyorthrow>CreateNonEnumerableDataPropertyOrThrow</a></emu-xref>(<var>error</var>, <emu-val>"message"</emu-val>, <var>message</var>).</li><li>Perform <emu-xref aoid=CreateNonEnumerableDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createnonenumerabledatapropertyorthrow>CreateNonEnumerableDataPropertyOrThrow</a></emu-xref>(<var>error</var>, <emu-val>"name"</emu-val>, <emu-val>"AbortError"</emu-val>).</li><li class=exit>Return <var>error</var>.</li></ol></emu-alg>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>On the web platform, the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> initializes the associated name and message of a new <a href=https://webidl.spec.whatwg.org/#idl-DOMException><code>DOMException</code></a>. Accessors on <code>DOMException.prototype</code> expose those values.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-hostinitializeabortcontroller type="host-defined abstract operation" aoid=HostInitializeAbortController>
+      <h1><span class=secnum>3.2.3</span> HostInitializeAbortController ( <var>controller</var> )</h1>
+      <p>The <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> abstract operation HostInitializeAbortController takes argument <var>controller</var> (an <emu-xref href=#sec-abortcontroller-constructor id=_ref_102><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref>) and returns <emu-const>unused</emu-const>. It initializes <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> state on <var>controller</var> in the current <emu-xref href=#realm><a href=https://tc39.es/ecma262/#realm>realm</a></emu-xref>.</p>
+      <p>An implementation of HostInitializeAbortController must not evaluate any ECMAScript code or modify the internal slots specified by ECMAScript.</p>
+      <p>The default implementation of HostInitializeAbortController is to return <emu-const>unused</emu-const>.</p>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>Web IDL can use <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref>-specified internal slots for <var class=field>[[Realm]]</var> and <var class=field>[[PrimaryInterface]]</var>.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-hostinitializeabortsignal type="host-defined abstract operation" aoid=HostInitializeAbortSignal>
+      <h1><span class=secnum>3.2.4</span> HostInitializeAbortSignal ( <var>signal</var>, <var>realm</var> )</h1>
+      <p>The <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> abstract operation HostInitializeAbortSignal takes arguments <var>signal</var> (an <emu-xref href=#sec-abortsignal-constructor id=_ref_103><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>) and <var>realm</var> (a <emu-xref href=#realm-record><a href=https://tc39.es/ecma262/#realm-record>Realm Record</a></emu-xref>) and returns <emu-const>unused</emu-const>. It initializes <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> state on <var>signal</var> in <var>realm</var>.</p>
+      <p>An implementation of HostInitializeAbortSignal must not evaluate any ECMAScript code or modify the internal slots specified by ECMAScript.</p>
+      <p>The default implementation of HostInitializeAbortSignal is to return <emu-const>unused</emu-const>.</p>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>Web IDL can use <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref>-specified internal slots for <var class=field>[[Realm]]</var> and <var class=field>[[PrimaryInterface]]</var>. For example, <a href=https://fetch.spec.whatwg.org/#dom-request-clone><code>Request.prototype.clone</code></a> creates its <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_104><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> in the request's relevant <emu-xref href=#realm><a href=https://tc39.es/ecma262/#realm>realm</a></emu-xref>, which can differ from the current <emu-xref href=#realm><a href=https://tc39.es/ecma262/#realm>realm</a></emu-xref>. On the web platform, the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> also initializes the state of an <code>EventTarget</code>, including its event listener list.</p>
+      </div></emu-note>
+    </emu-clause>
+
+    <emu-clause id=sec-hostabortsignalaborted type="host-defined abstract operation" aoid=HostAbortSignalAborted>
+      <h1><span class=secnum>3.2.5</span> HostAbortSignalAborted ( <var>signal</var> )</h1>
+      <p>The <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> abstract operation HostAbortSignalAborted takes argument <var>signal</var> (an <emu-xref href=#sec-abortsignal-constructor id=_ref_105><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>) and returns <emu-const>unused</emu-const>. It is called after all of <var>signal</var>'s abort algorithms have been performed.</p>
+      <p>The default implementation of HostAbortSignalAborted is to return <emu-const>unused</emu-const>.</p>
+      <emu-note><span class=note>Note</span><div class=note-contents>
+        <p>On the web platform, this fires an event named <code>abort</code> at <var>signal</var>. Listeners for that event run after all abort algorithms (including callbacks registered with <code>addAbortCallback</code>), as they do today.</p>
+      </div></emu-note>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id=sec-abortcontroller-objects>
+    <h1><span class=secnum>3.3</span> AbortController Objects</h1>
+
+    <emu-clause id=sec-abortcontroller-constructor>
+      <h1><span class=secnum>3.3.1</span> The AbortController Constructor</h1>
+      <p>The <dfn tabindex=-1 variants=AbortControllers>AbortController</dfn> <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref>:</p>
+      <ul>
+        <li>is <dfn tabindex=-1>%AbortController%</dfn>.</li>
+        <li>is the initial value of the <emu-val>"AbortController"</emu-val> property of the <emu-xref href=#sec-global-object><a href=https://tc39.es/ecma262/#sec-global-object>global object</a></emu-xref>.</li>
+        <li>creates and initializes a new AbortController when called as a <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref>.</li>
+        <li>is not intended to be called as a function and will throw an exception when called in that manner.</li>
+        <li>may be used as the value in an <code>extends</code> clause of a class definition. Subclass <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructors</a></emu-xref> that intend to inherit the specified <code>AbortController</code> behaviour must include a <code>super</code> call to the <code>AbortController</code> <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref> to create and initialize the subclass instance with the internal state necessary to support the built-in methods of <code>AbortController.prototype</code>.</li>
+      </ul>
+
+      <emu-clause id=sec-abortcontroller type="built-in function">
+        <h1><span class=secnum>3.3.1.1</span> AbortController ( )</h1>
+        <p>This function performs the following steps when called:</p>
+        <emu-alg><ol><li class=exit>If NewTarget is <emu-val>undefined</emu-val>, throw a <emu-val>TypeError</emu-val> exception.</li><li>Let <var>internalSlotsList</var> be « <var class=field>[[Signal]]</var> ».</li><li>Append to <var>internalSlotsList</var> the internal slot names the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref> specifies for all <emu-xref href=#sec-abortcontroller-constructor id=_ref_106><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> instances.</li><li class=exit>Let <var>controller</var> be ? <emu-xref aoid=OrdinaryCreateFromConstructor><a href=https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor>OrdinaryCreateFromConstructor</a></emu-xref>(NewTarget, <emu-val>"%AbortController.prototype%"</emu-val>, <var>internalSlotsList</var>).</li><li>Set <var>controller</var>.<var class=field>[[Signal]]</var> to <emu-xref id=_ref_107 aoid=CreateAbortSignal><a href=#sec-createabortsignal>CreateAbortSignal</a></emu-xref>(<emu-xref href=#current-realm><a href=https://tc39.es/ecma262/#current-realm>the current Realm Record</a></emu-xref>).</li><li>Perform <emu-xref id=_ref_108 aoid=HostInitializeAbortController><a href=#sec-hostinitializeabortcontroller>HostInitializeAbortController</a></emu-xref>(<var>controller</var>).</li><li class=exit>Return <var>controller</var>.</li></ol></emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-the-abortcontroller-constructor>
+      <h1><span class=secnum>3.3.2</span> Properties of the AbortController Constructor</h1>
+      <p>The <emu-xref href=#sec-abortcontroller-constructor id=_ref_109><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref>:</p>
+      <ul>
+        <li>has a <var class=field>[[Prototype]]</var> internal slot whose value is <emu-xref href=#sec-properties-of-the-function-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object>%Function.prototype%</a></emu-xref>.</li>
+        <li>has the following properties:</li>
+      </ul>
+
+      <emu-clause id=sec-abortcontroller.prototype>
+        <h1><span class=secnum>3.3.2.1</span> AbortController.prototype</h1>
+        <p>The initial value of <code>AbortController.prototype</code> is the <emu-xref href=#sec-properties-of-the-abortcontroller-prototype-object id=_ref_110><a href=#sec-properties-of-the-abortcontroller-prototype-object>AbortController prototype object</a></emu-xref>.</p>
+        <p>This property has the attributes { <var class=field>[[Writable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Enumerable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Configurable]]</var>: <emu-val>false</emu-val> }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-the-abortcontroller-prototype-object>
+      <h1><span class=secnum>3.3.3</span> Properties of the AbortController Prototype Object</h1>
+      <p>The <dfn tabindex=-1>AbortController prototype object</dfn>:</p>
+      <ul>
+        <li>is <dfn tabindex=-1>%AbortController.prototype%</dfn>.</li>
+        <li>has a <var class=field>[[Prototype]]</var> internal slot whose value is <emu-xref href=#sec-properties-of-the-object-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-object-prototype-object>%Object.prototype%</a></emu-xref>.</li>
+        <li>is an <emu-xref href=#ordinary-object><a href=https://tc39.es/ecma262/#ordinary-object>ordinary object</a></emu-xref>.</li>
+        <li>does not have a <var class=field>[[Signal]]</var> internal slot.</li>
+      </ul>
+
+      <emu-clause id=sec-abortcontroller.prototype.abort type="built-in function">
+        <h1><span class=secnum>3.3.3.1</span> AbortController.prototype.abort ( [ <var>reason</var> ] )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>controller</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>controller</var>, <var class=field>[[Signal]]</var>).</li><li>Perform <emu-xref id=_ref_111 aoid=SignalAbort><a href=#sec-signalabort>SignalAbort</a></emu-xref>(<var>controller</var>.<var class=field>[[Signal]]</var>, <var>reason</var>).</li><li class=exit>Return <emu-val>undefined</emu-val>.</li></ol></emu-alg>
+        <emu-note><span class=note>Note</span><div class=note-contents>
+          <p>If <var>reason</var> is <emu-val>undefined</emu-val> (including when it is not passed), the signal's abort reason is created by <emu-xref id=_ref_112 aoid=HostCreateAbortError><a href=#sec-hostcreateaborterror>HostCreateAbortError</a></emu-xref>.</p>
+        </div></emu-note>
+      </emu-clause>
+
+      <emu-clause id=sec-abortcontroller.prototype.constructor>
+        <h1><span class=secnum>3.3.3.2</span> AbortController.prototype.constructor</h1>
+        <p>The initial value of <code>AbortController.prototype.constructor</code> is <emu-xref href=#sec-abortcontroller-constructor id=_ref_113><a href=#sec-abortcontroller-constructor>%AbortController%</a></emu-xref>.</p>
+      </emu-clause>
+
+      <emu-clause id=sec-get-abortcontroller.prototype.signal type="built-in function">
+        <h1><span class=secnum>3.3.3.3</span> get AbortController.prototype.signal</h1>
+        <p><code>AbortController.prototype.signal</code> is an <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>accessor property</a></emu-xref> whose set accessor function is <emu-val>undefined</emu-val>. Its get accessor function performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>controller</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>controller</var>, <var class=field>[[Signal]]</var>).</li><li class=exit>Return <var>controller</var>.<var class=field>[[Signal]]</var>.</li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-abortcontroller.prototype-%symbol.tostringtag%>
+        <h1><span class=secnum>3.3.3.4</span> AbortController.prototype [ %Symbol.toStringTag% ]</h1>
+        <p>The initial value of the <emu-xref href=#sec-well-known-symbols><a href=https://tc39.es/ecma262/#sec-well-known-symbols>%Symbol.toStringTag%</a></emu-xref> property is the String value <emu-val>"AbortController"</emu-val>.</p>
+        <p>This property has the attributes { <var class=field>[[Writable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Enumerable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Configurable]]</var>: <emu-val>true</emu-val> }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-abortcontroller-instances>
+      <h1><span class=secnum>3.3.4</span> Properties of AbortController Instances</h1>
+      <p><emu-xref href=#sec-abortcontroller-constructor id=_ref_114><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> instances are <emu-xref href=#ordinary-object><a href=https://tc39.es/ecma262/#ordinary-object>ordinary objects</a></emu-xref> that inherit properties from the <emu-xref href=#sec-properties-of-the-abortcontroller-prototype-object id=_ref_115><a href=#sec-properties-of-the-abortcontroller-prototype-object>AbortController prototype object</a></emu-xref>. <emu-xref href=#sec-abortcontroller-constructor id=_ref_116><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> instances have the internal slots described in <emu-xref href=#table-internal-slots-of-abortcontroller-instances id=_ref_10><a href=#table-internal-slots-of-abortcontroller-instances>Table 3</a></emu-xref>.</p>
+      <emu-table caption="Internal Slots of AbortController Instances" id=table-internal-slots-of-abortcontroller-instances><figure><figcaption>Table 3: Internal Slots of <emu-xref href=#sec-abortcontroller-constructor id=_ref_117><a href=#sec-abortcontroller-constructor>AbortController</a></emu-xref> Instances</figcaption>
+        <table>
+          <thead>
+            <tr>
+              <th>Internal Slot</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody><tr>
+            <td><var class=field>[[Signal]]</var></td>
+            <td>an <emu-xref href=#sec-abortsignal-constructor id=_ref_118><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref></td>
+            <td>The signal which this controller aborts.</td>
+          </tr>
+        </tbody></table>
+      </figure></emu-table>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id=sec-abortsignal-objects>
+    <h1><span class=secnum>3.4</span> AbortSignal Objects</h1>
+
+    <emu-clause id=sec-abortsignal-constructor>
+      <h1><span class=secnum>3.4.1</span> The AbortSignal Constructor</h1>
+      <p>The <dfn tabindex=-1 variants=AbortSignals>AbortSignal</dfn> <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref>:</p>
+      <ul>
+        <li>is <dfn tabindex=-1>%AbortSignal%</dfn>.</li>
+        <li>is the initial value of the <emu-val>"AbortSignal"</emu-val> property of the <emu-xref href=#sec-global-object><a href=https://tc39.es/ecma262/#sec-global-object>global object</a></emu-xref>.</li>
+        <li>throws a <emu-val>TypeError</emu-val> exception when called as a function or as a <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref>. AbortSignals are created through <code>AbortController</code>, <code>AbortSignal.abort</code>, <code>AbortSignal.any</code>, or by the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref>.</li>
+      </ul>
+
+      <emu-clause id=sec-abortsignal type="built-in function">
+        <h1><span class=secnum>3.4.1.1</span> AbortSignal ( )</h1>
+        <p>This function performs the following steps when called:</p>
+        <emu-alg><ol><li class=exit>Throw a <emu-val>TypeError</emu-val> exception.</li></ol></emu-alg>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-the-abortsignal-constructor>
+      <h1><span class=secnum>3.4.2</span> Properties of the AbortSignal Constructor</h1>
+      <p>The <emu-xref href=#sec-abortsignal-constructor id=_ref_119><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref>:</p>
+      <ul>
+        <li>has a <var class=field>[[Prototype]]</var> internal slot whose value is <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> (see <emu-xref href=#sec-abortsignal-host-integration id=_ref_11><a href=#sec-abortsignal-host-integration>3.2</a></emu-xref>).</li>
+        <li>has the following properties:</li>
+      </ul>
+
+      <emu-clause id=sec-abortsignal.abort type="built-in function">
+        <h1><span class=secnum>3.4.2.1</span> AbortSignal.abort ( [ <var>reason</var> ] )</h1>
+        <p>This function returns a new <emu-xref href=#sec-abortsignal-constructor id=_ref_120><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> which is already aborted. It performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>signal</var> be <emu-xref id=_ref_121 aoid=CreateAbortSignal><a href=#sec-createabortsignal>CreateAbortSignal</a></emu-xref>(<emu-xref href=#current-realm><a href=https://tc39.es/ecma262/#current-realm>the current Realm Record</a></emu-xref>).</li><li>If <var>reason</var> is <emu-val>undefined</emu-val>, set <var>reason</var> to <emu-xref id=_ref_122 aoid=HostCreateAbortError><a href=#sec-hostcreateaborterror>HostCreateAbortError</a></emu-xref>().</li><li>Set <var>signal</var>.<var class=field>[[AbortReason]]</var> to <var>reason</var>.</li><li class=exit>Return <var>signal</var>.</li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-abortsignal.any type="built-in function">
+        <h1><span class=secnum>3.4.2.2</span> AbortSignal.any ( <var>signals</var> )</h1>
+        <p>This function returns a new <emu-xref href=#sec-abortsignal-constructor id=_ref_123><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> which is aborted when any element of <var>signals</var> is aborted, with the abort reason of the element that caused it to be aborted. It performs the following steps when called:</p>
+        <emu-alg><ol><li class=exit>If <var>signals</var> <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>is not an Object</a></emu-xref>, throw a <emu-val>TypeError</emu-val> exception.</li><li class=exit>Let <var>iteratorRecord</var> be ? <emu-xref aoid=GetIterator><a href=https://tc39.es/ecma262/#sec-getiterator>GetIterator</a></emu-xref>(<var>signals</var>, <emu-const>sync</emu-const>).</li><li>Let <var>signalsList</var> be a new empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>.</li><li>Repeat,<ol><li class=exit>Let <var>next</var> be ? <emu-xref aoid=IteratorStepValue><a href=https://tc39.es/ecma262/#sec-iteratorstepvalue>IteratorStepValue</a></emu-xref>(<var>iteratorRecord</var>).</li><li>If <var>next</var> is <emu-const>done</emu-const>, then<ol><li class=exit>Return <emu-xref id=_ref_124 aoid=CreateDependentAbortSignal><a href=#sec-createdependentabortsignal>CreateDependentAbortSignal</a></emu-xref>(<var>signalsList</var>, <emu-xref href=#current-realm><a href=https://tc39.es/ecma262/#current-realm>the current Realm Record</a></emu-xref>).</li></ol></li><li>If <var>next</var> <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>is not an Object</a></emu-xref> or <var>next</var> does not have an <var class=field>[[AbortReason]]</var> internal slot, then<ol><li>Let <var>error</var> be <emu-xref aoid=ThrowCompletion><a href=https://tc39.es/ecma262/#sec-throwcompletion>ThrowCompletion</a></emu-xref>(a newly created <emu-val>TypeError</emu-val> object).</li><li class=exit>Return ? <emu-xref aoid=IteratorClose><a href=https://tc39.es/ecma262/#sec-iteratorclose>IteratorClose</a></emu-xref>(<var>iteratorRecord</var>, <var>error</var>).</li></ol></li><li>Append <var>next</var> to <var>signalsList</var>.</li></ol></li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-abortsignal.prototype>
+        <h1><span class=secnum>3.4.2.3</span> AbortSignal.prototype</h1>
+        <p>The initial value of <code>AbortSignal.prototype</code> is the <emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_125><a href=#sec-properties-of-the-abortsignal-prototype-object>AbortSignal prototype object</a></emu-xref>.</p>
+        <p>This property has the attributes { <var class=field>[[Writable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Enumerable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Configurable]]</var>: <emu-val>false</emu-val> }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-the-abortsignal-prototype-object>
+      <h1><span class=secnum>3.4.3</span> Properties of the AbortSignal Prototype Object</h1>
+      <p>The <dfn tabindex=-1>AbortSignal prototype object</dfn>:</p>
+      <ul>
+        <li>is <dfn tabindex=-1>%AbortSignal.prototype%</dfn>.</li>
+        <li>has a <var class=field>[[Prototype]]</var> internal slot whose value is <emu-xref href=#host-defined><a href=https://tc39.es/ecma262/#host-defined>host-defined</a></emu-xref> (see <emu-xref href=#sec-abortsignal-host-integration id=_ref_12><a href=#sec-abortsignal-host-integration>3.2</a></emu-xref>).</li>
+        <li>is an <emu-xref href=#ordinary-object><a href=https://tc39.es/ecma262/#ordinary-object>ordinary object</a></emu-xref>.</li>
+        <li>does not have an <var class=field>[[AbortReason]]</var> internal slot or any of the other internal slots of <emu-xref href=#sec-abortsignal-constructor id=_ref_126><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> instances.</li>
+      </ul>
+
+      <emu-clause id=sec-abortsignal.prototype.addabortcallback type="built-in function">
+        <h1><span class=secnum>3.4.3.1</span> AbortSignal.prototype.addAbortCallback ( <var>callback</var> )</h1>
+        <p>This method registers <var>callback</var> to be called when the signal is aborted, and returns an <emu-xref href=#sec-abortcallbackregistration-objects id=_ref_127><a href=#sec-abortcallbackregistration-objects>abort callback registration</a></emu-xref> object which can be used to unregister the callback. If the signal is already aborted, it instead calls <var>callback</var> immediately and then throws the signal's abort reason. It performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>signal</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>signal</var>, <var class=field>[[AbortReason]]</var>).</li><li class=exit>If <emu-xref aoid=IsCallable><a href=https://tc39.es/ecma262/#sec-iscallable>IsCallable</a></emu-xref>(<var>callback</var>) is <emu-val>false</emu-val>, throw a <emu-val>TypeError</emu-val> exception.</li><li>Let <var>algorithm</var> be <emu-xref id=_ref_128 aoid=HostCreateAbortCallbackAlgorithm><a href=#sec-hostcreateabortcallbackalgorithm>HostCreateAbortCallbackAlgorithm</a></emu-xref>(<var>callback</var>).</li><li>Let <var>entry</var> be <emu-xref id=_ref_129 aoid=AddAbortAlgorithm><a href=#sec-addabortalgorithm>AddAbortAlgorithm</a></emu-xref>(<var>signal</var>, <var>algorithm</var>).</li><li>If <var>entry</var> is <emu-const>already-aborted</emu-const>, then<ol><li>Perform <var>algorithm</var>().</li><li class=exit>Throw <var>signal</var>.<var class=field>[[AbortReason]]</var>.</li></ol></li><li>Let <var>registration</var> be <emu-xref aoid=OrdinaryObjectCreate><a href=https://tc39.es/ecma262/#sec-ordinaryobjectcreate>OrdinaryObjectCreate</a></emu-xref>(<emu-xref href=#sec-%abortcallbackregistrationprototype%-object id=_ref_130><a href=#sec-%abortcallbackregistrationprototype%-object>%AbortCallbackRegistrationPrototype%</a></emu-xref>, « <var class=field>[[AbortRegistration]]</var> »).</li><li>Set <var>registration</var>.<var class=field>[[AbortRegistration]]</var> to <var>entry</var>.</li><li class=exit>Return <var>registration</var>.</li></ol></emu-alg>
+        <emu-note><span class=note>Note</span><div class=note-contents>
+          <p>The callback is called with <emu-val>undefined</emu-val> as its <emu-val>this</emu-val> value and with no arguments. Code which needs the abort reason can read it from the signal.</p>
+          <p>When the signal is already aborted, the callback is called before the abort reason is thrown, so that cleanup the callback performs (such as releasing a resource acquired just before registering it) still happens. An exception thrown by the callback is handled as described in <emu-xref href=#sec-hostcreateabortcallbackalgorithm id=_ref_13><a href=#sec-hostcreateabortcallbackalgorithm>3.2.1</a></emu-xref>, so in this case the method throws the signal's abort reason even if the callback throws.</p>
+          <p>Unlike with <code>addEventListener</code>, registering the same function multiple times causes it to be called multiple times. The signal retains the callback until it runs or is unregistered, but does not retain the public registration object, so that object can be collected while the callback is still pending.</p>
+        </div></emu-note>
+      </emu-clause>
+
+      <emu-clause id=sec-get-abortsignal.prototype.aborted type="built-in function">
+        <h1><span class=secnum>3.4.3.2</span> get AbortSignal.prototype.aborted</h1>
+        <p><code>AbortSignal.prototype.aborted</code> is an <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>accessor property</a></emu-xref> whose set accessor function is <emu-val>undefined</emu-val>. Its get accessor function performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>signal</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>signal</var>, <var class=field>[[AbortReason]]</var>).</li><li class=exit>Return <emu-xref id=_ref_131 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>).</li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-abortsignal.prototype.constructor>
+        <h1><span class=secnum>3.4.3.3</span> AbortSignal.prototype.constructor</h1>
+        <p>The initial value of <code>AbortSignal.prototype.constructor</code> is <emu-xref href=#sec-abortsignal-constructor id=_ref_132><a href=#sec-abortsignal-constructor>%AbortSignal%</a></emu-xref>.</p>
+      </emu-clause>
+
+      <emu-clause id=sec-get-abortsignal.prototype.reason type="built-in function">
+        <h1><span class=secnum>3.4.3.4</span> get AbortSignal.prototype.reason</h1>
+        <p><code>AbortSignal.prototype.reason</code> is an <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>accessor property</a></emu-xref> whose set accessor function is <emu-val>undefined</emu-val>. Its get accessor function performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>signal</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>signal</var>, <var class=field>[[AbortReason]]</var>).</li><li class=exit>Return <var>signal</var>.<var class=field>[[AbortReason]]</var>.</li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-abortsignal.prototype.throwifaborted type="built-in function">
+        <h1><span class=secnum>3.4.3.5</span> AbortSignal.prototype.throwIfAborted ( )</h1>
+        <p>This method performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>signal</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>signal</var>, <var class=field>[[AbortReason]]</var>).</li><li class=exit>If <emu-xref id=_ref_133 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) is <emu-val>true</emu-val>, throw <var>signal</var>.<var class=field>[[AbortReason]]</var>.</li><li class=exit>Return <emu-val>undefined</emu-val>.</li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-abortsignal.prototype-%symbol.tostringtag%>
+        <h1><span class=secnum>3.4.3.6</span> AbortSignal.prototype [ %Symbol.toStringTag% ]</h1>
+        <p>The initial value of the <emu-xref href=#sec-well-known-symbols><a href=https://tc39.es/ecma262/#sec-well-known-symbols>%Symbol.toStringTag%</a></emu-xref> property is the String value <emu-val>"AbortSignal"</emu-val>.</p>
+        <p>This property has the attributes { <var class=field>[[Writable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Enumerable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Configurable]]</var>: <emu-val>true</emu-val> }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-abortsignal-instances>
+      <h1><span class=secnum>3.4.4</span> Properties of AbortSignal Instances</h1>
+      <p><emu-xref href=#sec-abortsignal-constructor id=_ref_134><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> instances are <emu-xref href=#ordinary-object><a href=https://tc39.es/ecma262/#ordinary-object>ordinary objects</a></emu-xref> that inherit properties from the <emu-xref href=#sec-properties-of-the-abortsignal-prototype-object id=_ref_135><a href=#sec-properties-of-the-abortsignal-prototype-object>AbortSignal prototype object</a></emu-xref>. <emu-xref href=#sec-abortsignal-constructor id=_ref_136><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> instances have the internal slots described in <emu-xref href=#table-internal-slots-of-abortsignal-instances id=_ref_14><a href=#table-internal-slots-of-abortsignal-instances>Table 4</a></emu-xref>. <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>Hosts</a></emu-xref> may create <emu-xref href=#sec-abortsignal-constructor id=_ref_137><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> instances with additional internal slots (see <emu-xref href=#sec-abortsignal-host-integration id=_ref_15><a href=#sec-abortsignal-host-integration>3.2</a></emu-xref>).</p>
+      <emu-table caption="Internal Slots of AbortSignal Instances" id=table-internal-slots-of-abortsignal-instances><figure><figcaption>Table 4: Internal Slots of <emu-xref href=#sec-abortsignal-constructor id=_ref_138><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref> Instances</figcaption>
+        <table>
+          <thead>
+            <tr>
+              <th>Internal Slot</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody><tr>
+            <td><var class=field>[[AbortReason]]</var></td>
+            <td>an <emu-xref href=#sec-ecmascript-language-types><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types>ECMAScript language value</a></emu-xref></td>
+            <td>The reason the signal was aborted, or <emu-val>undefined</emu-val> if it has not been aborted.</td>
+          </tr>
+          <tr>
+            <td><var class=field>[[AbortAlgorithms]]</var></td>
+            <td>a <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_139><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Records</a></emu-xref></td>
+            <td>The registrations to run in insertion order when the signal is aborted.</td>
+          </tr>
+          <tr>
+            <td><var class=field>[[SourceSignals]]</var></td>
+            <td>a <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of <emu-xref href=#sec-abortsignal-constructor id=_ref_140><a href=#sec-abortsignal-constructor>AbortSignals</a></emu-xref> or <emu-const>not-dependent</emu-const></td>
+            <td><emu-const>not-dependent</emu-const> if this signal is not a <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_141><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref>. Otherwise, the non-dependent signals which this signal depends on. A <dfn tabindex=-1>dependent signal</dfn> is one created by <emu-xref id=_ref_142 aoid=CreateDependentAbortSignal><a href=#sec-createdependentabortsignal>CreateDependentAbortSignal</a></emu-xref> from signals none of which were already aborted. A <emu-xref href=#sec-properties-of-abortsignal-instances id=_ref_143><a href=#sec-properties-of-abortsignal-instances>dependent signal</a></emu-xref> created from an empty <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of signals has an empty <var class=field>[[SourceSignals]]</var> <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref>, and is never aborted.</td>
+          </tr>
+          <tr>
+            <td><var class=field>[[DependentSignals]]</var></td>
+            <td>a <emu-xref href=#sec-list-and-record-specification-type><a href=https://tc39.es/ecma262/#sec-list-and-record-specification-type>List</a></emu-xref> of <emu-xref href=#sec-abortsignal-constructor id=_ref_144><a href=#sec-abortsignal-constructor>AbortSignals</a></emu-xref></td>
+            <td>The dependent signals which depend on this signal.</td>
+          </tr>
+        </tbody></table>
+      </figure></emu-table>
+    </emu-clause>
+  </emu-clause>
+
+  <emu-clause id=sec-abortcallbackregistration-objects>
+    <h1><span class=secnum>3.5</span> Abort Callback Registration Objects</h1>
+    <p>An <dfn tabindex=-1 variants="abort callback registrations">abort callback registration</dfn> is an object returned by <code>AbortSignal.prototype.addAbortCallback</code>. Disposing it unregisters the corresponding callback. There is no <emu-xref href=#constructor><a href=https://tc39.es/ecma262/#constructor>constructor</a></emu-xref> for abort callback registrations.</p>
+
+    <emu-clause id=sec-%abortcallbackregistrationprototype%-object>
+      <h1><span class=secnum>3.5.1</span> The %AbortCallbackRegistrationPrototype% Object</h1>
+      <p>The <dfn tabindex=-1>%AbortCallbackRegistrationPrototype%</dfn> object:</p>
+      <ul>
+        <li>has a <var class=field>[[Prototype]]</var> internal slot whose value is <emu-xref href=#sec-properties-of-the-object-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-object-prototype-object>%Object.prototype%</a></emu-xref>.</li>
+        <li>is an <emu-xref href=#ordinary-object><a href=https://tc39.es/ecma262/#ordinary-object>ordinary object</a></emu-xref>.</li>
+      </ul>
+
+      <emu-clause id=sec-%abortcallbackregistrationprototype%.remove type="built-in function">
+        <h1><span class=secnum>3.5.1.1</span> %AbortCallbackRegistrationPrototype%.remove ( )</h1>
+        <p>This method unregisters the callback if it has not yet been called. It performs the following steps when called:</p>
+        <emu-alg><ol><li>Let <var>registration</var> be the <emu-val>this</emu-val> value.</li><li class=exit>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>registration</var>, <var class=field>[[AbortRegistration]]</var>).</li><li>Perform <emu-xref id=_ref_145 aoid=RemoveAbortAlgorithm><a href=#sec-removeabortalgorithm>RemoveAbortAlgorithm</a></emu-xref>(<var>registration</var>.<var class=field>[[AbortRegistration]]</var>).</li><li class=exit>Return <emu-val>undefined</emu-val>.</li></ol></emu-alg>
+      </emu-clause>
+
+      <emu-clause id=sec-%abortcallbackregistrationprototype%-%symbol.dispose%>
+        <h1><span class=secnum>3.5.1.2</span> %AbortCallbackRegistrationPrototype% [ %Symbol.dispose% ] ( )</h1>
+        <p>The initial value of the <code>%Symbol.dispose%</code> property is %AbortCallbackRegistrationPrototype.remove%, defined in <emu-xref href=#sec-%abortcallbackregistrationprototype%.remove id=_ref_16><a href=#sec-%abortcallbackregistrationprototype%.remove>3.5.1.1</a></emu-xref>.</p>
+        <emu-note><span class=note>Note</span><div class=note-contents>
+          <p>This allows <code>using</code> declarations to scope a callback registration to a block. If <code>signal</code> is already aborted, <code>addAbortCallback</code> closes the connection and throws the abort reason, so the request is never sent:</p>
+          <pre><code class="hljs javascript"><span class=hljs-keyword>async</span> <span class=hljs-keyword>function</span> <span class="function_ hljs-title">doWork</span>(<span class=hljs-params>signal, connection, request</span>) {
+  using _ = signal.<span class="function_ hljs-title">addAbortCallback</span>(<span class=hljs-function>() =></span> connection.<span class="function_ hljs-title">close</span>());
+  <span class=hljs-keyword>await</span> connection.<span class="function_ hljs-title">send</span>(request);
+} <span class=hljs-comment>// the callback is unregistered here</span></code></pre>
+        </div></emu-note>
+      </emu-clause>
+
+      <emu-clause id=sec-%abortcallbackregistrationprototype%-%symbol.tostringtag%>
+        <h1><span class=secnum>3.5.1.3</span> %AbortCallbackRegistrationPrototype% [ %Symbol.toStringTag% ]</h1>
+        <p>The initial value of the <emu-xref href=#sec-well-known-symbols><a href=https://tc39.es/ecma262/#sec-well-known-symbols>%Symbol.toStringTag%</a></emu-xref> property is the String value <emu-val>"AbortCallbackRegistration"</emu-val>.</p>
+        <p>This property has the attributes { <var class=field>[[Writable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Enumerable]]</var>: <emu-val>false</emu-val>, <var class=field>[[Configurable]]</var>: <emu-val>true</emu-val> }.</p>
+      </emu-clause>
+    </emu-clause>
+
+    <emu-clause id=sec-properties-of-abortcallbackregistration-instances>
+      <h1><span class=secnum>3.5.2</span> Properties of Abort Callback Registration Instances</h1>
+      <p><emu-xref href=#sec-abortcallbackregistration-objects id=_ref_146><a href=#sec-abortcallbackregistration-objects>Abort callback registrations</a></emu-xref> are <emu-xref href=#ordinary-object><a href=https://tc39.es/ecma262/#ordinary-object>ordinary objects</a></emu-xref> that inherit properties from <emu-xref href=#sec-%abortcallbackregistrationprototype%-object id=_ref_147><a href=#sec-%abortcallbackregistrationprototype%-object>%AbortCallbackRegistrationPrototype%</a></emu-xref>. They have the internal slots described in <emu-xref href=#table-internal-slots-of-abortcallbackregistration-instances id=_ref_17><a href=#table-internal-slots-of-abortcallbackregistration-instances>Table 5</a></emu-xref>.</p>
+      <emu-table caption="Internal Slots of Abort Callback Registration Instances" id=table-internal-slots-of-abortcallbackregistration-instances><figure><figcaption>Table 5: Internal Slots of Abort Callback Registration Instances</figcaption>
+        <table>
+          <thead>
+            <tr>
+              <th>Internal Slot</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody><tr>
+            <td><var class=field>[[AbortRegistration]]</var></td>
+            <td>an <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_148><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref></td>
+            <td>The entry returned by <emu-xref id=_ref_149 aoid=AddAbortAlgorithm><a href=#sec-addabortalgorithm>AddAbortAlgorithm</a></emu-xref>.</td>
+          </tr>
+        </tbody></table>
+      </figure></emu-table>
+    </emu-clause>
+  </emu-clause>
+</emu-clause>
+
+<emu-clause id=sec-atomics>
+  <h1><span class=secnum>4</span> Atomics</h1>
+
+  <emu-clause id=sec-waiter-record>
+    <h1><span class=secnum>4.1</span> Waiter Record</h1>
+    <emu-note type=editor><span class=note>Editor's Note</span><div class=note-contents>Only the added field is shown.</div></emu-note>
+    <emu-table caption="Waiter Record Fields" id=table-waiterrecord><figure><figcaption>Table 6: <emu-xref href=#sec-waiter-record id=_ref_150><a href=#sec-waiter-record>Waiter Record</a></emu-xref> Fields</figcaption>
+      <table>
+        <thead>
+          <tr><th>Field Name</th><th>Value</th><th>Meaning</th></tr>
+        </thead>
+        <tbody><tr>
+          <td><ins><var class=field>[[AbortRegistration]]</var></ins></td>
+          <td><ins>an <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_151><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref> or <emu-const>empty</emu-const></ins></td>
+          <td><ins>The registration for an abortable asynchronous wait. Only the waiting <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref> accesses this field.</ins></td>
+        </tr>
+      </tbody></table>
+    </figure></emu-table>
+  </emu-clause>
+
+  <emu-clause id=sec-notifywaiter type="abstract operation" aoid=NotifyWaiter>
+    <h1><span class=secnum>4.2</span> NotifyWaiter ( <var>waiterList</var>, <var>waiterRecord</var> )</h1>
+    <p>The abstract operation NotifyWaiter takes arguments <var>waiterList</var> (a <emu-xref href=#sec-waiterlist-records><a href=https://tc39.es/ecma262/#sec-waiterlist-records>WaiterList Record</a></emu-xref>) and <var>waiterRecord</var> (a <emu-xref href=#sec-waiter-record id=_ref_152><a href=#sec-waiter-record>Waiter Record</a></emu-xref>) and returns <emu-const>unused</emu-const>. It performs the following steps when called:</p>
+    <emu-alg><ol><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: The <emu-xref href=#surrounding-agent><a href=https://tc39.es/ecma262/#surrounding-agent>surrounding agent</a></emu-xref> is in the <emu-xref href=#sec-waiterlist-records><a href=https://tc39.es/ecma262/#sec-waiterlist-records>critical section</a></emu-xref> for <var>waiterList</var>.</li><li>If <var>waiterRecord</var>.<var class=field>[[PromiseCapability]]</var> is <emu-const>blocking</emu-const>, then<ol><li>Wake the <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref> whose signifier is <var>waiterRecord</var>.<var class=field>[[AgentSignifier]]</var> from suspension.</li><li><emu-xref href=#note-step><a href=https://tc39.es/ecma262/#note-step>NOTE</a></emu-xref>: This causes the <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref> to resume execution in <emu-xref aoid=SuspendThisAgent><a href=https://tc39.es/ecma262/#sec-suspendthisagent>SuspendThisAgent</a></emu-xref>.</li></ol></li><li>Else if <emu-xref aoid=AgentSignifier><a href=https://tc39.es/ecma262/#sec-agentsignifier>AgentSignifier</a></emu-xref>() is <var>waiterRecord</var>.<var class=field>[[AgentSignifier]]</var>, then<ol><li><del>Let <var>promiseCapability</var> be <var>waiterRecord</var>.<var class=field>[[PromiseCapability]]</var>.</del></li><li><del>Perform ! <emu-xref aoid=Call><a href=https://tc39.es/ecma262/#sec-call>Call</a></emu-xref>(<var>promiseCapability</var>.<var class=field>[[Resolve]]</var>, <emu-val>undefined</emu-val>, « <var>waiterRecord</var>.<var class=field>[[Result]]</var> »).</del></li><li><ins>Perform <emu-xref id=_ref_153 aoid=ResolveAsyncWaiter><a href=#sec-resolveasyncwaiter>ResolveAsyncWaiter</a></emu-xref>(<var>waiterRecord</var>).</ins></li></ol></li><li>Else,<ol><li>Perform <emu-xref id=_ref_154 aoid=EnqueueResolveInAgentJob><a href=#sec-enqueueresolveinagentjob>EnqueueResolveInAgentJob</a></emu-xref>(<del><var>waiterRecord</var>.<var class=field>[[AgentSignifier]]</var>, <var>waiterRecord</var>.<var class=field>[[PromiseCapability]]</var>, <var>waiterRecord</var>.<var class=field>[[Result]]</var></del><ins><var>waiterRecord</var></ins>).</li></ol></li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></emu-alg>
+    <emu-note><span class=note>Note</span><div class=note-contents>
+      <p>An <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref> must not access another <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref>'s promise capability in any capacity beyond passing it to the <emu-xref href=#host><a href=https://tc39.es/ecma262/#host>host</a></emu-xref>.</p>
+    </div></emu-note>
+  </emu-clause>
+
+  <emu-clause id=sec-enqueueresolveinagentjob type="abstract operation" aoid=EnqueueResolveInAgentJob>
+    <h1><span class=secnum>4.3</span> EnqueueResolveInAgentJob ( <del><var>agentSignifier</var></del>, <del><var>promiseCapability</var></del>, <del><var>resolution</var></del>, <ins><var>waiterRecord</var></ins> )</h1>
+    <p>The abstract operation EnqueueResolveInAgentJob takes arguments <del><var>agentSignifier</var> (an <emu-xref href=#sec-agents><a href=https://tc39.es/ecma262/#sec-agents>agent signifier</a></emu-xref>)</del>, <del><var>promiseCapability</var> (a <emu-xref href=#sec-promisecapability-records><a href=https://tc39.es/ecma262/#sec-promisecapability-records>PromiseCapability Record</a></emu-xref>)</del>, <del><var>resolution</var> (<emu-val>"ok"</emu-val> or <emu-val>"timed-out"</emu-val>)</del>, and <ins><var>waiterRecord</var> (a <emu-xref href=#sec-waiter-record id=_ref_155><a href=#sec-waiter-record>Waiter Record</a></emu-xref>)</ins> and returns <emu-const>unused</emu-const>. It performs the following steps when called:</p>
+    <emu-alg><ol><li>Let <var>resolveJob</var> be a new <emu-xref href=#job><a href=https://tc39.es/ecma262/#job>Job</a></emu-xref> <emu-xref href=#sec-abstract-closure><a href=https://tc39.es/ecma262/#sec-abstract-closure>Abstract Closure</a></emu-xref> with no parameters that captures <del><var>agentSignifier</var>, <var>promiseCapability</var>, and <var>resolution</var></del><ins><var>waiterRecord</var></ins> and performs the following steps when called:<ol class=ac-body><li><del><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <emu-xref aoid=AgentSignifier><a href=https://tc39.es/ecma262/#sec-agentsignifier>AgentSignifier</a></emu-xref>() is <var>agentSignifier</var>.</del></li><li><del>Perform ! <emu-xref aoid=Call><a href=https://tc39.es/ecma262/#sec-call>Call</a></emu-xref>(<var>promiseCapability</var>.<var class=field>[[Resolve]]</var>, <emu-val>undefined</emu-val>, « <var>resolution</var> »).</del></li><li><ins>Perform <emu-xref id=_ref_156 aoid=ResolveAsyncWaiter><a href=#sec-resolveasyncwaiter>ResolveAsyncWaiter</a></emu-xref>(<var>waiterRecord</var>).</ins></li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></li><li>Let <var>realmInTargetAgent</var> be ! <emu-xref aoid=GetFunctionRealm><a href=https://tc39.es/ecma262/#sec-getfunctionrealm>GetFunctionRealm</a></emu-xref>(<del><var>promiseCapability</var></del><ins><var>waiterRecord</var>.<var class=field>[[PromiseCapability]]</var></ins>.<var class=field>[[Resolve]]</var>).</li><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <del><var>agentSignifier</var></del><ins><var>waiterRecord</var>.<var class=field>[[AgentSignifier]]</var></ins> is <var>realmInTargetAgent</var>.<var class=field>[[AgentSignifier]]</var>.</li><li>Perform <emu-xref aoid=HostEnqueueGenericJob><a href=https://tc39.es/ecma262/#sec-hostenqueuegenericjob>HostEnqueueGenericJob</a></emu-xref>(<var>resolveJob</var>, <var>realmInTargetAgent</var>).</li><li class=exit>Return <emu-const>unused</emu-const>.</li></ol></emu-alg>
+  </emu-clause>
+
+  <emu-clause id=sec-resolveasyncwaiter type="abstract operation" aoid=ResolveAsyncWaiter>
+    <h1><span class=secnum>4.4</span> <ins>ResolveAsyncWaiter ( <var>waiterRecord</var> )</ins></h1>
+    <p>The abstract operation ResolveAsyncWaiter takes argument <var>waiterRecord</var> (a <emu-xref href=#sec-waiter-record id=_ref_157><a href=#sec-waiter-record>Waiter Record</a></emu-xref>) and returns <emu-const>unused</emu-const>. It performs the following steps when called:</p>
+    <emu-alg><ol><li><ins><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <emu-xref aoid=AgentSignifier><a href=https://tc39.es/ecma262/#sec-agentsignifier>AgentSignifier</a></emu-xref>() is <var>waiterRecord</var>.<var class=field>[[AgentSignifier]]</var>.</ins></li><li><ins>Let <var>entry</var> be <var>waiterRecord</var>.<var class=field>[[AbortRegistration]]</var>.</ins></li><li><ins>If <var>entry</var> is not <emu-const>empty</emu-const>, perform <emu-xref id=_ref_158 aoid=RemoveAbortAlgorithm><a href=#sec-removeabortalgorithm>RemoveAbortAlgorithm</a></emu-xref>(<var>entry</var>).</ins></li><li><ins>Let <var>promiseCapability</var> be <var>waiterRecord</var>.<var class=field>[[PromiseCapability]]</var>.</ins></li><li><ins>Perform ! <emu-xref aoid=Call><a href=https://tc39.es/ecma262/#sec-call>Call</a></emu-xref>(<var>promiseCapability</var>.<var class=field>[[Resolve]]</var>, <emu-val>undefined</emu-val>, « <var>waiterRecord</var>.<var class=field>[[Result]]</var> »).</ins></li><li><ins>Return <emu-const>unused</emu-const>.</ins></li></ol></emu-alg>
+  </emu-clause>
+
+  <emu-clause id=sec-dowait type="abstract operation" aoid=DoWait>
+    <h1><span class=secnum>4.5</span> DoWait ( <var>mode</var>, <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var> )</h1>
+    <p>The abstract operation DoWait takes arguments <var>mode</var> (<emu-const>sync</emu-const> or <emu-const>async</emu-const>), <var>ta</var> (an <emu-xref href=#sec-ecmascript-language-types><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types>ECMAScript language value</a></emu-xref>), <var>index</var> (an <emu-xref href=#sec-ecmascript-language-types><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types>ECMAScript language value</a></emu-xref>), <var>value</var> (an <emu-xref href=#sec-ecmascript-language-types><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types>ECMAScript language value</a></emu-xref>), and <var>timeout</var> (an <emu-xref href=#sec-ecmascript-language-types><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types>ECMAScript language value</a></emu-xref>) and returns either a <emu-xref href=#sec-completion-record-specification-type><a href=https://tc39.es/ecma262/#sec-completion-record-specification-type>normal completion containing</a></emu-xref> either an Object, <emu-val>"not-equal"</emu-val>, <emu-val>"timed-out"</emu-val>, or <emu-val>"ok"</emu-val>, or a <emu-xref href=#sec-completion-record-specification-type><a href=https://tc39.es/ecma262/#sec-completion-record-specification-type>throw completion</a></emu-xref>. It performs the following steps when called:</p>
+    <emu-alg><ol><li class=exit>Let <var>taRecord</var> be ? <emu-xref aoid=ValidateIntegerTypedArray><a href=https://tc39.es/ecma262/#sec-validateintegertypedarray>ValidateIntegerTypedArray</a></emu-xref>(<var>ta</var>, <emu-val>true</emu-val>).</li><li>Let <var>buffer</var> be <var>taRecord</var>.<var class=field>[[Object]]</var>.<var class=field>[[ViewedArrayBuffer]]</var>.</li><li class=exit>If <emu-xref aoid=IsSharedArrayBuffer><a href=https://tc39.es/ecma262/#sec-issharedarraybuffer>IsSharedArrayBuffer</a></emu-xref>(<var>buffer</var>) is <emu-val>false</emu-val>, throw a <emu-val>TypeError</emu-val> exception.</li><li class=exit>Let <var>byteIndexInBuffer</var> be ? <emu-xref aoid=ValidateAtomicAccess><a href=https://tc39.es/ecma262/#sec-validateatomicaccess>ValidateAtomicAccess</a></emu-xref>(<var>taRecord</var>, <var>index</var>).</li><li>Let <var>elementType</var> be <emu-xref aoid=TypedArrayElementType><a href=https://tc39.es/ecma262/#sec-typedarrayelementtype>TypedArrayElementType</a></emu-xref>(<var>ta</var>).</li><li><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <var>elementType</var> is either <emu-const>bigint64</emu-const> or <emu-const>int32</emu-const>.</li><li class=exit>If <var>elementType</var> is <emu-const>bigint64</emu-const>, let <var>expected</var> be ? <emu-xref aoid=ToBigInt64><a href=https://tc39.es/ecma262/#sec-tobigint64>ToBigInt64</a></emu-xref>(<var>value</var>); else let <var>expected</var> be ? <emu-xref aoid=ToInt32><a href=https://tc39.es/ecma262/#sec-toint32>ToInt32</a></emu-xref>(<var>value</var>).</li><li><del>Let <var>timeoutNumber</var> be ? <emu-xref aoid=ToNumber><a href=https://tc39.es/ecma262/#sec-tonumber>ToNumber</a></emu-xref>(<var>timeout</var>).</del></li><li><ins>If <var>mode</var> is <emu-const>async</emu-const> and <var>timeout</var> <emu-xref href=#sec-object-type><a href=https://tc39.es/ecma262/#sec-object-type>is an Object</a></emu-xref>, then</ins><ol><li><ins>Let <var>timeoutNumber</var> be ? <emu-xref aoid=Get><a href=https://tc39.es/ecma262/#sec-get-o-p>Get</a></emu-xref>(<var>timeout</var>, <emu-val>"timeout"</emu-val>).</ins></li><li><ins>Let <var>signal</var> be ? <emu-xref aoid=Get><a href=https://tc39.es/ecma262/#sec-get-o-p>Get</a></emu-xref>(<var>timeout</var>, <emu-val>"signal"</emu-val>).</ins></li></ol></li><li><ins>Else,</ins><ol><li><ins>Let <var>timeoutNumber</var> be <var>timeout</var>.</ins></li><li><ins>Let <var>signal</var> be <emu-val>undefined</emu-val>.</ins></li></ol></li><li><ins>If <var>timeoutNumber</var> is <emu-val>undefined</emu-val>, set <var>timeoutNumber</var> to <emu-val>+∞</emu-val><sub>𝔽</sub>.</ins></li><li><ins>If <var>timeoutNumber</var> <emu-xref href=#sec-ecmascript-language-types-number-type><a href=https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type>is not a Number</a></emu-xref>, throw a <emu-val>TypeError</emu-val> exception.</ins></li><li><ins>If <var>timeoutNumber</var> is <emu-val>NaN</emu-val>, throw a <emu-val>RangeError</emu-val> exception.</ins></li><li><ins>If <var>signal</var> is not <emu-val>undefined</emu-val>, then</ins><ol><li><ins>Perform ? <emu-xref aoid=RequireInternalSlot><a href=https://tc39.es/ecma262/#sec-requireinternalslot>RequireInternalSlot</a></emu-xref>(<var>signal</var>, <var class=field>[[AbortReason]]</var>).</ins></li><li><ins>If <emu-xref id=_ref_159 aoid=IsAborted><a href=#sec-isaborted>IsAborted</a></emu-xref>(<var>signal</var>) is <emu-val>true</emu-val>, throw <var>signal</var>.<var class=field>[[AbortReason]]</var>.</ins></li></ol></li><li>If <var>timeoutNumber</var> is <del>either <emu-val>NaN</emu-val> or </del><emu-val>+∞</emu-val><sub>𝔽</sub>, let <var>realTimeout</var> be +∞.</li><li>Else if <var>timeoutNumber</var> is <emu-val>-∞</emu-val><sub>𝔽</sub>, let <var>realTimeout</var> be 0.</li><li>Else, let <var>realTimeout</var> be <emu-xref aoid=max><a href=https://tc39.es/ecma262/#eqn-max>max</a></emu-xref>(<emu-xref aoid=ℝ><a href=https://tc39.es/ecma262/#ℝ>ℝ</a></emu-xref>(<var>timeoutNumber</var>), 0).</li><li class=exit>If <var>mode</var> is <emu-const>sync</emu-const> and <emu-xref aoid=AgentCanSuspend><a href=https://tc39.es/ecma262/#sec-agentcansuspend>AgentCanSuspend</a></emu-xref>() is <emu-val>false</emu-val>, throw a <emu-val>TypeError</emu-val> exception.</li><li>Let <var>block</var> be <var>buffer</var>.<var class=field>[[ArrayBufferData]]</var>.</li><li>Let <var>waiterList</var> be <emu-xref aoid=GetWaiterList><a href=https://tc39.es/ecma262/#sec-getwaiterlist>GetWaiterList</a></emu-xref>(<var>block</var>, <var>byteIndexInBuffer</var>).</li><li>If <var>mode</var> is <emu-const>sync</emu-const>, then<ol><li>Let <var>promiseCapability</var> be <emu-const>blocking</emu-const>.</li><li>Let <var>resultObj</var> be <emu-val>undefined</emu-val>.</li></ol></li><li>Else,<ol><li>Let <var>promiseCapability</var> be ! <emu-xref aoid=NewPromiseCapability><a href=https://tc39.es/ecma262/#sec-newpromisecapability>NewPromiseCapability</a></emu-xref>(<emu-xref href=#sec-promise-constructor><a href=https://tc39.es/ecma262/#sec-promise-constructor>%Promise%</a></emu-xref>).</li><li>Let <var>resultObj</var> be <emu-xref aoid=OrdinaryObjectCreate><a href=https://tc39.es/ecma262/#sec-ordinaryobjectcreate>OrdinaryObjectCreate</a></emu-xref>(<emu-xref href=#sec-properties-of-the-object-prototype-object><a href=https://tc39.es/ecma262/#sec-properties-of-the-object-prototype-object>%Object.prototype%</a></emu-xref>).</li></ol></li><li>Perform <emu-xref aoid=EnterCriticalSection><a href=https://tc39.es/ecma262/#sec-entercriticalsection>EnterCriticalSection</a></emu-xref>(<var>waiterList</var>).</li><li>Let <var>witness</var> be <emu-xref aoid=GetValueFromBuffer><a href=https://tc39.es/ecma262/#sec-getvaluefrombuffer>GetValueFromBuffer</a></emu-xref>(<var>buffer</var>, <var>byteIndexInBuffer</var>, <var>elementType</var>, <emu-val>true</emu-val>, <emu-const>seq-cst</emu-const>).</li><li>If <var>expected</var> ≠ <var>witness</var>, then<ol><li>Perform <emu-xref aoid=LeaveCriticalSection><a href=https://tc39.es/ecma262/#sec-leavecriticalsection>LeaveCriticalSection</a></emu-xref>(<var>waiterList</var>).</li><li class=exit>If <var>mode</var> is <emu-const>sync</emu-const>, return <emu-val>"not-equal"</emu-val>.</li><li>Perform ! <emu-xref aoid=CreateDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createdatapropertyorthrow>CreateDataPropertyOrThrow</a></emu-xref>(<var>resultObj</var>, <emu-val>"async"</emu-val>, <emu-val>false</emu-val>).</li><li>Perform ! <emu-xref aoid=CreateDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createdatapropertyorthrow>CreateDataPropertyOrThrow</a></emu-xref>(<var>resultObj</var>, <emu-val>"value"</emu-val>, <emu-val>"not-equal"</emu-val>).</li><li class=exit>Return <var>resultObj</var>.</li></ol></li><li>If <var>realTimeout</var> = 0 and <var>mode</var> is <emu-const>async</emu-const>, then<ol><li><emu-xref href=#note-step><a href=https://tc39.es/ecma262/#note-step>NOTE</a></emu-xref>: There is no special handling of synchronous immediate timeouts. Asynchronous immediate timeouts have special handling in order to fail fast and avoid unnecessary Promise jobs.</li><li>Perform <emu-xref aoid=LeaveCriticalSection><a href=https://tc39.es/ecma262/#sec-leavecriticalsection>LeaveCriticalSection</a></emu-xref>(<var>waiterList</var>).</li><li>Perform ! <emu-xref aoid=CreateDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createdatapropertyorthrow>CreateDataPropertyOrThrow</a></emu-xref>(<var>resultObj</var>, <emu-val>"async"</emu-val>, <emu-val>false</emu-val>).</li><li>Perform ! <emu-xref aoid=CreateDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createdatapropertyorthrow>CreateDataPropertyOrThrow</a></emu-xref>(<var>resultObj</var>, <emu-val>"value"</emu-val>, <emu-val>"timed-out"</emu-val>).</li><li class=exit>Return <var>resultObj</var>.</li></ol></li><li>Let <var>thisAgent</var> be <emu-xref aoid=AgentSignifier><a href=https://tc39.es/ecma262/#sec-agentsignifier>AgentSignifier</a></emu-xref>().</li><li>Let <var>now</var> be the <emu-xref href=#sec-time-values-and-time-range><a href=https://tc39.es/ecma262/#sec-time-values-and-time-range>time value</a></emu-xref> (UTC) identifying the current time.</li><li>Let <var>additionalTimeout</var> be an <emu-xref href=#implementation-defined><a href=https://tc39.es/ecma262/#implementation-defined>implementation-defined</a></emu-xref> non-negative <emu-xref href=#mathematical-value><a href=https://tc39.es/ecma262/#mathematical-value>mathematical value</a></emu-xref>.</li><li>Let <var>timeoutTime</var> be <emu-xref aoid=ℝ><a href=https://tc39.es/ecma262/#ℝ>ℝ</a></emu-xref>(<var>now</var>) + <var>realTimeout</var> + <var>additionalTimeout</var>.</li><li><emu-xref href=#note-step><a href=https://tc39.es/ecma262/#note-step>NOTE</a></emu-xref>: When <var>realTimeout</var> is +∞, <var>timeoutTime</var> is also +∞.</li><li>Let <var>waiterRecord</var> be a new <emu-xref href=#sec-waiter-record id=_ref_160><a href=#sec-waiter-record>Waiter Record</a></emu-xref> { <var class=field>[[AgentSignifier]]</var>: <var>thisAgent</var>, <var class=field>[[PromiseCapability]]</var>: <var>promiseCapability</var>, <var class=field>[[TimeoutTime]]</var>: <var>timeoutTime</var>, <var class=field>[[Result]]</var>: <emu-val>"ok"</emu-val><ins>, <var class=field>[[AbortRegistration]]</var>: <emu-const>empty</emu-const></ins> }.</li><li><ins>If <var>signal</var> is not <emu-val>undefined</emu-val>, then</ins><ol><li><ins>Let <var>algorithm</var> be a new <emu-xref href=#sec-abstract-closure><a href=https://tc39.es/ecma262/#sec-abstract-closure>Abstract Closure</a></emu-xref> with no parameters that captures <var>waiterList</var>, <var>waiterRecord</var>, <var>signal</var>, and <var>promiseCapability</var> and performs the following steps when called:</ins><ol><li><ins>Perform <emu-xref aoid=EnterCriticalSection><a href=https://tc39.es/ecma262/#sec-entercriticalsection>EnterCriticalSection</a></emu-xref>(<var>waiterList</var>).</ins></li><li><ins>Let <var>pending</var> be whether <var>waiterList</var>.<var class=field>[[Waiters]]</var> contains <var>waiterRecord</var>.</ins></li><li><ins>If <var>pending</var> is <emu-val>true</emu-val>, perform <emu-xref aoid=RemoveWaiter><a href=https://tc39.es/ecma262/#sec-removewaiter>RemoveWaiter</a></emu-xref>(<var>waiterList</var>, <var>waiterRecord</var>).</ins></li><li><ins>Perform <emu-xref aoid=LeaveCriticalSection><a href=https://tc39.es/ecma262/#sec-leavecriticalsection>LeaveCriticalSection</a></emu-xref>(<var>waiterList</var>).</ins></li><li><ins>If <var>pending</var> is <emu-val>true</emu-val>, perform ! <emu-xref aoid=Call><a href=https://tc39.es/ecma262/#sec-call>Call</a></emu-xref>(<var>promiseCapability</var>.<var class=field>[[Reject]]</var>, <emu-val>undefined</emu-val>, « <var>signal</var>.<var class=field>[[AbortReason]]</var> »).</ins></li><li><ins>Return <emu-const>unused</emu-const>.</ins></li></ol></li><li><ins>Let <var>entry</var> be <emu-xref id=_ref_161 aoid=AddAbortAlgorithm><a href=#sec-addabortalgorithm>AddAbortAlgorithm</a></emu-xref>(<var>signal</var>, <var>algorithm</var>).</ins></li><li><ins><emu-xref href=#assert><a href=https://tc39.es/ecma262/#assert>Assert</a></emu-xref>: <var>entry</var> is an <emu-xref href=#sec-abort-algorithm-registration-records id=_ref_162><a href=#sec-abort-algorithm-registration-records>Abort Algorithm Registration Record</a></emu-xref>.</ins></li><li><ins>Set <var>waiterRecord</var>.<var class=field>[[AbortRegistration]]</var> to <var>entry</var>.</ins></li></ol></li><li>Perform <emu-xref aoid=AddWaiter><a href=https://tc39.es/ecma262/#sec-addwaiter>AddWaiter</a></emu-xref>(<var>waiterList</var>, <var>waiterRecord</var>).</li><li>If <var>mode</var> is <emu-const>sync</emu-const>, then<ol><li>Perform <emu-xref aoid=SuspendThisAgent><a href=https://tc39.es/ecma262/#sec-suspendthisagent>SuspendThisAgent</a></emu-xref>(<var>waiterList</var>, <var>waiterRecord</var>).</li></ol></li><li>Else if <var>timeoutTime</var> is finite, then<ol><li>Perform <emu-xref aoid=EnqueueAtomicsWaitAsyncTimeoutJob><a href=https://tc39.es/ecma262/#sec-enqueueatomicswaitasynctimeoutjob>EnqueueAtomicsWaitAsyncTimeoutJob</a></emu-xref>(<var>waiterList</var>, <var>waiterRecord</var>).</li></ol></li><li>Perform <emu-xref aoid=LeaveCriticalSection><a href=https://tc39.es/ecma262/#sec-leavecriticalsection>LeaveCriticalSection</a></emu-xref>(<var>waiterList</var>).</li><li class=exit>If <var>mode</var> is <emu-const>sync</emu-const>, return <var>waiterRecord</var>.<var class=field>[[Result]]</var>.</li><li>Perform ! <emu-xref aoid=CreateDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createdatapropertyorthrow>CreateDataPropertyOrThrow</a></emu-xref>(<var>resultObj</var>, <emu-val>"async"</emu-val>, <emu-val>true</emu-val>).</li><li>Perform ! <emu-xref aoid=CreateDataPropertyOrThrow><a href=https://tc39.es/ecma262/#sec-createdatapropertyorthrow>CreateDataPropertyOrThrow</a></emu-xref>(<var>resultObj</var>, <emu-val>"value"</emu-val>, <var>promiseCapability</var>.<var class=field>[[Promise]]</var>).</li><li class=exit>Return <var>resultObj</var>.</li></ol></emu-alg>
+    <emu-note><span class=note>Note</span><div class=note-contents>
+      <p><ins>Aborting, notifying, and timing out compete to remove the same waiter from its waiter list. For example, if another <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref> has already removed the waiter in <code>Atomics.notify</code>, aborting the signal leaves the queued resolution with <emu-val>"ok"</emu-val> in effect. If the abort algorithm removes the waiter first, a subsequent notification does not count it.</ins></p>
+      <p><var>additionalTimeout</var> allows implementations to pad timeouts as necessary, such as for reducing power consumption or coarsening timer resolution to mitigate timing attacks. This value may differ from call to call of DoWait.</p>
+    </div></emu-note>
+  </emu-clause>
+
+  <emu-clause id=sec-atomics.wait type="built-in function">
+    <h1><span class=secnum>4.6</span> Atomics.wait ( <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var> )</h1>
+    <p>This function puts the <emu-xref href=#surrounding-agent><a href=https://tc39.es/ecma262/#surrounding-agent>surrounding agent</a></emu-xref> in a wait queue and suspends it until notified or until the wait times out, returning a String differentiating those cases.</p>
+    <p><ins>An omitted or <emu-val>undefined</emu-val> <var>timeout</var> specifies an unbounded wait. Otherwise, <var>timeout</var> must be a Number. Passing <emu-val>NaN</emu-val> throws a <emu-val>RangeError</emu-val>.</ins></p>
+    <p>It performs the following steps when called:</p>
+    <emu-alg><ol><li class=exit>Return ? <emu-xref id=_ref_163 aoid=DoWait><a href=#sec-dowait>DoWait</a></emu-xref>(<emu-const>sync</emu-const>, <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var>).</li></ol></emu-alg>
+  </emu-clause>
+
+  <emu-clause id=sec-atomics.waitasync type="built-in function">
+    <h1><span class=secnum>4.7</span> Atomics.waitAsync ( <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var> )</h1>
+    <p>This function returns an Object with <code>async</code> and <code>value</code> properties. If <code>async</code> is <emu-val>true</emu-val>, <code>value</code> is a Promise that is fulfilled with either <emu-val>"ok"</emu-val> when the calling <emu-xref href=#agent><a href=https://tc39.es/ecma262/#agent>agent</a></emu-xref> is notified or with <emu-val>"timed-out"</emu-val> when the timeout is reached. Otherwise, <code>async</code> is <emu-val>false</emu-val> and <code>value</code> is either <emu-val>"not-equal"</emu-val> or <emu-val>"timed-out"</emu-val>.</p>
+    <p><ins>The fourth argument may be <emu-val>undefined</emu-val>, a Number (in milliseconds), or an Object with optional <emu-val>"timeout"</emu-val> and <emu-val>"signal"</emu-val> properties. Each option may be omitted or <emu-val>undefined</emu-val>; otherwise, <emu-val>"timeout"</emu-val> must be a Number and <emu-val>"signal"</emu-val> must be an <emu-xref href=#sec-abortsignal-constructor id=_ref_164><a href=#sec-abortsignal-constructor>AbortSignal</a></emu-xref>. Passing <emu-val>NaN</emu-val> as the fourth argument or as the <emu-val>"timeout"</emu-val> option throws a <emu-val>RangeError</emu-val>. If the signal is already aborted, this function throws its abort reason. If the signal aborts while the waiter is pending, the returned Promise is rejected with the signal's abort reason.</ins></p>
+    <p>It performs the following steps when called:</p>
+    <emu-alg><ol><li class=exit>Return ? <emu-xref id=_ref_165 aoid=DoWait><a href=#sec-dowait>DoWait</a></emu-xref>(<emu-const>async</emu-const>, <var>ta</var>, <var>index</var>, <var>value</var>, <var>timeout</var>).</li></ol></emu-alg>
+  </emu-clause>
+</emu-clause><emu-annex back-matter="" id=sec-copyright-and-software-license>
+        <h1>Copyright & Software License</h1>
+        
+        <div class=copyright-notice id=copyright-notice><h2>Copyright Notice</h2>
+<p>© 2026 Ron Buckton, Kevin Gibbons</p>
+</div>
+        <h2>Software License</h2>
+        <p>All Software contained in this document ("Software") is protected by copyright and is being made available under the "BSD License", included below. This Software may be subject to third party rights (rights from parties other than Ecma International), including patent rights, and no licenses under such third party rights are granted under this license even if the third party concerned is a member of Ecma International. SEE THE ECMA CODE OF CONDUCT IN PATENT MATTERS AVAILABLE AT <a href=https://ecma-international.org/memento/codeofconduct.htm>https://ecma-international.org/memento/codeofconduct.htm</a> FOR INFORMATION REGARDING THE LICENSING OF PATENT CLAIMS THAT ARE REQUIRED TO IMPLEMENT ECMA INTERNATIONAL STANDARDS.</p>
+
+<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
+
+<ol>
+  <li>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</li>
+  <li>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</li>
+  <li>Neither the name of the authors nor Ecma International may be used to endorse or promote products derived from this software without specific prior written permission.</li>
+</ol>
+
+<p>THIS SOFTWARE IS PROVIDED BY THE ECMA INTERNATIONAL "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL ECMA INTERNATIONAL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+
+      </emu-annex>
+</div></body>
